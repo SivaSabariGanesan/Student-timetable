@@ -8,9 +8,10 @@ import StudentProfile from './pages/StudentProfile';
 import RoomSearch from './pages/RoomSearch';
 import FacultySearch from './pages/FacultySearch';
 import Explore from './pages/Explore';
+import Login from './pages/Login';
 
 export default function App() {
-  const { status, progress, error, logs } = useData();
+  const { status, progress, error } = useData();
 
   if (status === 'loading') return <LoadingSkeleton progress={progress} />;
 
@@ -19,17 +20,7 @@ export default function App() {
       <div className="min-h-screen flex items-center justify-center px-6">
         <div className="text-center max-w-sm">
           <h1 className="font-display text-xl font-semibold text-bad mb-2">Couldn't load timetable data</h1>
-          <p className="text-sm text-slate2-500">{error?.message || 'Check that the CSV files are present in /public/data.'}</p>
-          {logs && logs.length > 0 && (
-            <div className="mt-4 text-left text-xs font-mono text-slate2-400 max-h-48 overflow-auto bg-ink-950 p-3 rounded">
-              <div className="font-semibold mb-2">Recent logs</div>
-              <ul className="list-disc pl-4">
-                {logs.slice(0, 20).map((l) => (
-                  <li key={l}>{l}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <p className="text-sm text-slate2-500">{error?.message || 'Check that the backend server is running.'}</p>
         </div>
       </div>
     );
@@ -46,6 +37,7 @@ export default function App() {
           <Route path="/rooms" element={<RoomSearch />} />
           <Route path="/faculty" element={<FacultySearch />} />
           <Route path="/explore" element={<Explore />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </main>
     </div>

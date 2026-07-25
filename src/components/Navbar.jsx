@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FiGrid, FiUser, FiMapPin, FiUsers, FiSliders, FiMenu, FiX } from 'react-icons/fi';
+import { FiGrid, FiUser, FiMapPin, FiUsers, FiSliders, FiMenu, FiX, FiLogIn, FiLogOut } from 'react-icons/fi';
 import ThemeToggle from './ThemeToggle';
+import { useAuth } from '../context/AuthContext';
 
 const LINKS = [
   { to: '/', label: 'Dashboard', icon: FiGrid, end: true },
@@ -12,6 +13,7 @@ const LINKS = [
 ];
 
 export default function Navbar() {
+  const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
 
   return (
@@ -48,6 +50,24 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {user ? (
+            <button
+              onClick={logout}
+              className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-ink-700 dark:text-paper-200 hover:bg-ink-900/5 dark:hover:bg-paper-100/10 transition-colors"
+              title="Sign out"
+            >
+              <FiLogOut size={15} />
+              <span className="hidden lg:inline">{user.name}</span>
+            </button>
+          ) : (
+            <NavLink
+              to="/login"
+              className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-ink-700 dark:text-paper-200 hover:bg-ink-900/5 dark:hover:bg-paper-100/10 transition-colors"
+            >
+              <FiLogIn size={15} />
+              Sign in
+            </NavLink>
+          )}
           <ThemeToggle />
           <button
             className="md:hidden w-9 h-9 rounded-full flex items-center justify-center border rule"
@@ -77,6 +97,22 @@ export default function Navbar() {
               {label}
             </NavLink>
           ))}
+          {user ? (
+            <button
+              onClick={() => { logout(); setOpen(false); }}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-ink-700 dark:text-paper-200"
+            >
+              <FiLogOut size={16} /> Sign out
+            </button>
+          ) : (
+            <NavLink
+              to="/login"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-ink-700 dark:text-paper-200"
+            >
+              <FiLogIn size={16} /> Sign in
+            </NavLink>
+          )}
         </nav>
       )}
     </header>

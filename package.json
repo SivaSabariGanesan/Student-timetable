@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "autoprefixer": "^10.5.4",
+    "axios": "^1.18.1",
     "dayjs": "^1.11.21",
     "papaparse": "^5.5.4",
     "postcss": "^8.5.23",
