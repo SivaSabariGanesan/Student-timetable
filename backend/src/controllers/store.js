@@ -1,4 +1,4 @@
-import { getStore } from '../services/store.js';
+import { getStore, invalidateStore } from '../services/store.js';
 
 export async function getFullStore(req, res, next) {
   try {
@@ -19,6 +19,16 @@ export async function getFullStore(req, res, next) {
     };
 
     res.json(serializable);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function rebuildStore(req, res, next) {
+  try {
+    invalidateStore();
+    const store = await getStore({ forceRebuild: true });
+    res.json({ message: 'Store rebuilt', studentCount: store.studentsArray.length, masterCount: store.master.length });
   } catch (err) {
     next(err);
   }

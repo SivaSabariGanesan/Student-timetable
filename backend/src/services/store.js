@@ -145,9 +145,18 @@ function buildAttendeeIndex(flatSessions) {
 }
 
 export async function buildStore() {
+  const selResult = await query('SELECT COUNT(*) AS cnt FROM student_selection');
+  console.log('student_selection count:', selResult.rows[0]?.cnt);
+
   const { rows: selections } = await query(
     'SELECT * FROM student_selection ORDER BY enrollment_number'
   );
+  if (selections.length > 0) {
+    console.log('First row keys:', Object.keys(selections[0]));
+    console.log('First row enrollment_number:', JSON.stringify(selections[0].enrollment_number));
+    console.log('Row values array:', JSON.stringify(Object.values(selections[0])).slice(0, 300));
+    console.log('First row sample:', JSON.stringify(selections[0]).slice(0, 400));
+  }
   const { rows: theory } = await query("SELECT * FROM timetable WHERE type = 'theory' ORDER BY id");
   const { rows: lab } = await query("SELECT * FROM timetable WHERE type = 'lab' ORDER BY id");
 
@@ -292,6 +301,15 @@ export async function buildStore() {
     byFaculty.get(r.faculty).push(r);
   }
 
+  console.log('Processed', selections.length, 'selection rows, studentsMap.size:', studentsMap.size);
+  if (studentsMap.size === 0 && selections.length > 0) {
+    console.log('DEBUG: First row enrollment_number type:', typeof selections[0].enrollment_number);
+    console.log('DEBUG: enrollment_number in row:', 'enrollment_number' in selections[0]);
+    // Try column at index 1 (based on schema: id=0, enrollment_number=1)
+    const vals = Object.values(selections[0]);
+    console.log('DEBUG: value at index 1:', vals[1]);
+  }
+
   const store = {
     studentIndex,
     flatSessions,
@@ -320,9 +338,11 @@ export async function buildStore() {
   return store;
 }
 
-export async function getStore() {
-  if (!cached) {
+export async function getStore({ forceRebuild } = {}) {
+  if (!cached || forceRebuild) {
+    console.log('Building store from database...');
     cached = await buildStore();
+    console.log('Store built with', cached.studentsArray.length, 'students,', cached.master.length, 'master rows');
   }
   return cached;
 }
