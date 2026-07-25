@@ -19,6 +19,13 @@ async function runSchema() {
 }
 
 async function seedUsers() {
+  // Create default superuser
+  const superPassword = await bcrypt.hash('Nammadhan@123', 12);
+  await query(
+    `INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING`,
+    ['superuser@rajalakshmi.edu.in', superPassword, 'Superuser', 'superuser']
+  );
+
   // Create default admin user
   const adminPassword = await bcrypt.hash('admin123', 12);
   await query(
@@ -26,16 +33,9 @@ async function seedUsers() {
     ['admin@rajalakshmi.edu.in', adminPassword, 'Admin', 'admin']
   );
 
-  // Create a sample faculty user
-  const facultyPassword = await bcrypt.hash('faculty123', 12);
-  await query(
-    `INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING`,
-    ['faculty@rajalakshmi.edu.in', facultyPassword, 'Faculty', 'faculty']
-  );
-
   console.log('Seed users created');
-  console.log('  Admin:  admin@rajalakshmi.edu.in / admin123');
-  console.log('  Faculty: faculty@rajalakshmi.edu.in / faculty123');
+  console.log('  Superuser: superuser@rajalakshmi.edu.in / Nammadhan@123');
+  console.log('  Admin:     admin@rajalakshmi.edu.in / admin123');
 }
 
 async function seed() {

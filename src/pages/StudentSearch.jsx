@@ -12,9 +12,14 @@ export default function StudentSearch() {
   const suggestions = useMemo(() => {
     if (!q.trim()) return [];
     const query = q.trim().toLowerCase();
-    return store.studentIndex.filter(
+    const isRegLookup = /^\d/.test(query); // starts with digit → sort by reg, else by name
+    const matched = store.studentIndex.filter(
       (s) => s.reg.toLowerCase().includes(query) || s.name.toLowerCase().includes(query)
     );
+    if (!isRegLookup) {
+      matched.sort((a, b) => a.name.localeCompare(b.name) || a.reg.localeCompare(b.reg));
+    }
+    return matched;
   }, [q, store]);
 
   const results = suggestions.slice(0, 40);

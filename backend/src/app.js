@@ -12,6 +12,7 @@ import facultyRoutes from './routes/faculty.js';
 import exploreRoutes from './routes/explore.js';
 import dashboardRoutes from './routes/dashboard.js';
 import storeRoutes from './routes/store.js';
+import userRoutes from './routes/users.js';
 
 const app = express();
 
@@ -44,6 +45,7 @@ app.use('/api/faculty', facultyRoutes);
 app.use('/api/explore', exploreRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/store', storeRoutes);
+app.use('/api/users', userRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

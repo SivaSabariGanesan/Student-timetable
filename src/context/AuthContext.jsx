@@ -3,6 +3,8 @@ import api from '../services/api';
 
 const AuthContext = createContext(null);
 
+const ROLE_RANK = { superuser: 3, admin: 2, user: 1 };
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,8 +27,17 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
+  /** True if the logged-in user has at least the given role rank. */
+  function hasRole(role) {
+    if (!user) return false;
+    return (ROLE_RANK[user.role] ?? 0) >= (ROLE_RANK[role] ?? 0);
+  }
+
+  const isSuperuser = user?.role === 'superuser';
+  const isAdmin     = hasRole('admin');   // true for admin AND superuser
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, hasRole, isAdmin, isSuperuser }}>
       {children}
     </AuthContext.Provider>
   );

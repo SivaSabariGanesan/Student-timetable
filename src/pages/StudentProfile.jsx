@@ -5,7 +5,7 @@ import { useData } from '../context/DataContext';
 import CurrentClassBoard from '../components/CurrentClassBoard';
 import TimetableGrid from '../components/TimetableGrid';
 import { colorForCode } from '../utils/colors';
-import { formatMinutes, todayName } from '../utils/time';
+import { formatMinutes, todayName, DAY_ORDER } from '../utils/time';
 
 export default function StudentProfile() {
   const { reg } = useParams();
@@ -18,12 +18,12 @@ export default function StudentProfile() {
     const out = [];
     for (const course of student.courses) {
       for (const slot of course.slots) {
-        // slot.room is set per-slot by resolveRooms (theory slots get classroom,
-        // lab slots get the lab room). Fall back to course.room if not resolved.
         const room = slot.room || course.room;
         out.push({ ...slot, code: course.code, courseName: course.name, faculty: course.faculty, room });
       }
     }
+    // Sort: day order first, then ascending start time
+    out.sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day) || a.start - b.start);
     return out;
   }, [student]);
 
@@ -60,19 +60,19 @@ export default function StudentProfile() {
           </div>
 
           <dl className="mt-5 space-y-2.5 text-sm">
-            <div className="flex justify-between border-b rule pb-2.5">
+            <div className="flex flex-wrap justify-between border-b rule pb-2.5 gap-2">
               <dt className="text-slate2-500">Department</dt>
               <dd className="font-medium text-right">{student.deptName}</dd>
             </div>
-            <div className="flex justify-between border-b rule pb-2.5">
+            <div className="flex flex-wrap justify-between border-b rule pb-2.5 gap-2">
               <dt className="text-slate2-500">Year / Semester</dt>
               <dd className="font-medium">Semester {student.semester}</dd>
             </div>
-            <div className="flex justify-between border-b rule pb-2.5">
+            <div className="flex flex-wrap justify-between border-b rule pb-2.5 gap-2">
               <dt className="text-slate2-500">Section</dt>
               <dd className="font-medium">{student.section || '—'}</dd>
             </div>
-            <div className="flex justify-between items-start gap-3">
+            <div className="flex flex-wrap justify-between items-start gap-2">
               <dt className="text-slate2-500 flex items-center gap-1.5 shrink-0"><FiMail size={13} /> Email</dt>
               <dd className="font-medium text-right break-all text-xs">{student.email}</dd>
             </div>
@@ -81,7 +81,13 @@ export default function StudentProfile() {
           <div className="mt-5 pt-4 border-t rule">
             <div className="eyebrow mb-2 flex items-center gap-1.5"><FiBookOpen size={12} /> Selected courses</div>
             <ul className="space-y-1.5">
-              {student.courses.map((c, i) => {
+              {[...student.courses]
+                .sort((a, b) => {
+                  const aFirst = a.slots.reduce((min, s) => Math.min(min, DAY_ORDER.indexOf(s.day) * 1440 + s.start), Infinity);
+                  const bFirst = b.slots.reduce((min, s) => Math.min(min, DAY_ORDER.indexOf(s.day) * 1440 + s.start), Infinity);
+                  return aFirst - bFirst;
+                })
+                .map((c, i) => {
                 const col = colorForCode(c.code);
                 return (
                   <li key={i} className="flex items-center gap-2 text-sm">
@@ -107,13 +113,13 @@ export default function StudentProfile() {
                 {todaySessions.map((s, i) => {
                   const col = colorForCode(s.code);
                   return (
-                    <div key={i} className={`card p-3.5 flex items-center gap-3 border-l-4 ${col.border}`}>
-                      <div className="font-mono text-xs text-slate2-500 w-24 shrink-0">
+                    <div key={i} className={`card p-3.5 flex items-start gap-3 border-l-4 ${col.border}`}>
+                      <div className="font-mono text-xs text-slate2-500 shrink-0 whitespace-nowrap pt-0.5">
                         {formatMinutes(s.start)}–{formatMinutes(s.end)}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="font-medium truncate">{s.courseName}</div>
-                        <div className="text-xs text-slate2-500 truncate">{s.faculty} · Room {s.room}</div>
+                        <div className="font-medium break-words">{s.courseName}</div>
+                        <div className="text-xs text-slate2-500 break-words">{s.faculty} · Room {s.room}</div>
                       </div>
                     </div>
                   );

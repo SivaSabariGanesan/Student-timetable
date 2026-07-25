@@ -1,20 +1,32 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FiGrid, FiUser, FiMapPin, FiUsers, FiSliders, FiMenu, FiX, FiLogIn, FiLogOut } from 'react-icons/fi';
+import { FiGrid, FiUser, FiMapPin, FiUsers, FiSliders, FiMenu, FiX, FiLogOut, FiShield } from 'react-icons/fi';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '../context/AuthContext';
 
-const LINKS = [
-  { to: '/', label: 'Dashboard', icon: FiGrid, end: true },
-  { to: '/students', label: 'Find Student', icon: FiUser },
-  { to: '/explore', label: 'Explore', icon: FiSliders },
-  { to: '/rooms', label: 'Rooms', icon: FiMapPin },
-  { to: '/faculty', label: 'Faculty', icon: FiUsers },
+const BASE_LINKS = [
+  { to: '/',        label: 'Dashboard',    icon: FiGrid,    end: true },
+  { to: '/students',label: 'Find Student', icon: FiUser },
+  { to: '/explore', label: 'Explore',      icon: FiSliders },
+  { to: '/rooms',   label: 'Rooms',        icon: FiMapPin },
+  { to: '/faculty', label: 'Faculty',      icon: FiUsers },
 ];
 
+const ROLE_LABEL = {
+  superuser: { text: 'Superuser', cls: 'text-purple-500 dark:text-purple-400' },
+  admin:     { text: 'Admin',     cls: 'text-amber-500 dark:text-amber-400' },
+  user:      { text: 'User',      cls: 'text-slate2-400' },
+};
+
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const [open, setOpen] = useState(false);
+
+  const links = isAdmin
+    ? [...BASE_LINKS, { to: '/users', label: 'Users', icon: FiShield }]
+    : BASE_LINKS;
+
+  const roleInfo = user ? (ROLE_LABEL[user.role] ?? ROLE_LABEL.user) : null;
 
   return (
     <header className="sticky top-0 z-40 bg-paper-50/90 dark:bg-ink-900/90 backdrop-blur border-b rule">
@@ -30,7 +42,7 @@ export default function Navbar() {
         </NavLink>
 
         <nav className="hidden md:flex items-center gap-1">
-          {LINKS.map(({ to, label, icon: Icon, end }) => (
+          {links.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
@@ -50,23 +62,20 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
-          {user ? (
+          {user && (
             <button
               onClick={logout}
-              className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-ink-700 dark:text-paper-200 hover:bg-ink-900/5 dark:hover:bg-paper-100/10 transition-colors"
+              className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-ink-700 dark:text-paper-200 hover:bg-ink-900/5 dark:hover:bg-paper-100/10 transition-colors"
               title="Sign out"
             >
+              <span className="hidden lg:inline leading-tight text-right">
+                <span className="block">{user.name}</span>
+                {roleInfo && (
+                  <span className={`block text-xs ${roleInfo.cls}`}>{roleInfo.text}</span>
+                )}
+              </span>
               <FiLogOut size={15} />
-              <span className="hidden lg:inline">{user.name}</span>
             </button>
-          ) : (
-            <NavLink
-              to="/login"
-              className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-ink-700 dark:text-paper-200 hover:bg-ink-900/5 dark:hover:bg-paper-100/10 transition-colors"
-            >
-              <FiLogIn size={15} />
-              Sign in
-            </NavLink>
           )}
           <ThemeToggle />
           <button
@@ -81,7 +90,7 @@ export default function Navbar() {
 
       {open && (
         <nav className="md:hidden border-t rule px-4 py-2 flex flex-col gap-1 bg-paper-50 dark:bg-ink-900">
-          {LINKS.map(({ to, label, icon: Icon, end }) => (
+          {links.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
@@ -97,21 +106,19 @@ export default function Navbar() {
               {label}
             </NavLink>
           ))}
-          {user ? (
+          {user && (
             <button
               onClick={() => { logout(); setOpen(false); }}
               className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-ink-700 dark:text-paper-200"
             >
-              <FiLogOut size={16} /> Sign out
+              <FiLogOut size={16} />
+              <span>
+                Sign out
+                {roleInfo && (
+                  <span className={`ml-1.5 text-xs ${roleInfo.cls}`}>({roleInfo.text})</span>
+                )}
+              </span>
             </button>
-          ) : (
-            <NavLink
-              to="/login"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-ink-700 dark:text-paper-200"
-            >
-              <FiLogIn size={16} /> Sign in
-            </NavLink>
           )}
         </nav>
       )}

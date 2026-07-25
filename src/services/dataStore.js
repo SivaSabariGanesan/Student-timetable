@@ -1,4 +1,4 @@
-import { parseRange, normalizeDay, parseStudentSlots } from '../utils/time';
+import { parseRange, normalizeDay, parseStudentSlots, DAY_ORDER } from '../utils/time';
 
 function parseSection(bucket) {
   if (!bucket) return '';
@@ -255,7 +255,15 @@ export function buildStore({ selections, theory, lab }) {
   const labNorm = lab.map((r) => normalizeMasterRow(r, 'lab')).filter(Boolean);
   const master = [...theoryNorm, ...labNorm];
 
+  // Sort master schedule: day order first, then ascending start time
+  master.sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day) || a.start - b.start);
+
   resolveRooms(flatSessions, master);
+
+  // Sort flat sessions: day order, then ascending start time, then name
+  flatSessions.sort(
+    (a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day) || a.start - b.start || a.name.localeCompare(b.name)
+  );
 
   const roomSet = new Set(roomSetFromSelections);
   const masterRoomSet = new Set();
@@ -280,6 +288,7 @@ export function buildStore({ selections, theory, lab }) {
     if (!byFaculty.has(r.faculty)) byFaculty.set(r.faculty, []);
     byFaculty.get(r.faculty).push(r);
   }
+  // Buckets are already in day+time order because master was sorted before insertion
 
   return {
     studentsMap,
@@ -399,7 +408,15 @@ export async function buildStoreAsync({ selections, theory, lab }, { onProgress 
   const labNorm = lab.map((r) => normalizeMasterRow(r, 'lab')).filter(Boolean);
   const master = [...theoryNorm, ...labNorm];
 
+  // Sort master schedule: day order first, then ascending start time
+  master.sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day) || a.start - b.start);
+
   resolveRooms(flatSessions, master);
+
+  // Sort flat sessions: day order, then ascending start time, then name
+  flatSessions.sort(
+    (a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day) || a.start - b.start || a.name.localeCompare(b.name)
+  );
 
   const roomSet = new Set(roomSetFromSelections);
   const masterRoomSet = new Set();
@@ -424,6 +441,7 @@ export async function buildStoreAsync({ selections, theory, lab }, { onProgress 
     if (!byFaculty.has(r.faculty)) byFaculty.set(r.faculty, []);
     byFaculty.get(r.faculty).push(r);
   }
+  // Buckets are already in day+time order because master was sorted before insertion
 
   return {
     studentsMap,

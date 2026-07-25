@@ -137,7 +137,14 @@ self.onmessage = async (ev) => {
   const labNorm = lab.map((r) => normalizeMasterRow(r, 'lab')).filter(Boolean);
   const master = [...theoryNorm, ...labNorm];
 
-  // Resolve room per flat session using type-aware master schedule lookup.
+  // Sort master schedule: day order first, then ascending start time
+  const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  master.sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day) || a.start - b.start);
+
+  // Sort flat sessions: day order, then ascending start time, then name
+  flatSessions.sort(
+    (a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day) || a.start - b.start || a.name.localeCompare(b.name)
+  );
   // Theory slot (≤55 min) → match theory master rows; lab slot → match lab rows.
   // Falls back to course name when code is missing from master (electives).
   const theoryByCode = new Map();

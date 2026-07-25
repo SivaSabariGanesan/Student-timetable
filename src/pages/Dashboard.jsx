@@ -57,7 +57,18 @@ export default function Dashboard() {
       const key = formatMinutes(hour * 60).replace(':00', '');
       map.set(key, (map.get(key) || 0) + 1);
     }
-    return Array.from(map, ([name, value]) => ({ name, value }));
+    // Sort by hour (8 AM → 5 PM ascending)
+    return Array.from(map, ([name, value]) => ({ name, value }))
+      .sort((a, b) => {
+        const toH = (label) => {
+          const [h, period] = label.split(' ');
+          let hour = parseInt(h, 10);
+          if (period === 'PM' && hour !== 12) hour += 12;
+          if (period === 'AM' && hour === 12) hour = 0;
+          return hour;
+        };
+        return toH(a.name) - toH(b.name);
+      });
   }, [store]);
 
   const roomUtilization = useMemo(() => {
@@ -79,7 +90,7 @@ export default function Dashboard() {
         <p className="text-sm text-slate2-500 mt-1">A live read of every section, room and faculty slot on the timetable.</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <StatCard icon={FiUsers} label="Students" value={stats.students} />
         <StatCard icon={FiUser} label="Faculty" value={stats.faculty} />
         <StatCard icon={FiMapPin} label="Rooms" value={stats.rooms} />
