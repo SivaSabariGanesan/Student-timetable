@@ -33,6 +33,16 @@ function normalizeMasterRow(row, type) {
   };
 }
 
+function pickBestRoom(roomsField) {
+  if (!roomsField) return 'TBA';
+  const parts = roomsField.split(/;\s*/).map((s) => s.trim()).filter(Boolean);
+  const real = parts.find((p) => {
+    const lower = p.toLowerCase();
+    return lower !== 'classroom' && lower !== 'tba' && lower !== '';
+  });
+  return real || parts[0] || 'TBA';
+}
+
 self.onmessage = async (ev) => {
   try {
     const { selections = [], theory = [], lab = [] } = ev.data || {};
@@ -73,7 +83,7 @@ self.onmessage = async (ev) => {
       code: row.course_code || '',
       name: row.course_name || '',
       faculty: row.faculty || 'TBA',
-      room: row.rooms || 'TBA',
+      room: pickBestRoom(row.rooms),
       batch: row.batch_number || '',
       slots,
     };
@@ -101,6 +111,7 @@ self.onmessage = async (ev) => {
         day: slot.day,
         start: slot.start,
         end: slot.end,
+        _courseRef: course,
       });
     }
 
@@ -124,6 +135,31 @@ self.onmessage = async (ev) => {
   const theoryNorm = theory.map((r) => normalizeMasterRow(r, 'theory')).filter(Boolean);
   const labNorm = lab.map((r) => normalizeMasterRow(r, 'lab')).filter(Boolean);
   const master = [...theoryNorm, ...labNorm];
+
+  // Resolve generic "Classroom" / "TBA" room labels using master schedule
+  const byCodeForResolve = new Map();
+  for (const m of master) {
+    if (!m.code) continue;
+    if (!byCodeForResolve.has(m.code)) byCodeForResolve.set(m.code, []);
+    byCodeForResolve.get(m.code).push(m);
+  }
+  for (const s of flatSessions) {
+    const r = (s.room || '').toLowerCase();
+    if (r && r !== 'classroom' && r !== 'tba') continue;
+    const candidates = byCodeForResolve.get(s.code) || [];
+    for (const c of candidates) {
+      if (c.day !== s.day) continue;
+      if (!(s.end <= c.start || s.start >= c.end)) {
+        const resolvedRoom = c.room || s.room;
+        s.room = resolvedRoom;
+        // Also update the student course object so it serializes with the real room
+        if (s._courseRef) s._courseRef.room = resolvedRoom;
+        break;
+      }
+    }
+  }
+  // Strip internal references before serialization
+  for (const s of flatSessions) delete s._courseRef;
 
   const roomSet = new Set(roomSetFromSelections);
   const masterRoomSet = new Set();

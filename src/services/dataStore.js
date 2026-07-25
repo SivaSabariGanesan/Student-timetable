@@ -33,6 +33,54 @@ function normalizeMasterRow(row, type) {
   };
 }
 
+/**
+ * Picks the most useful room from a possibly multi-room string like
+ * "A208/209-B (A Block); Classroom; TLFL1/2 (Techlounge)".
+ * Returns the first non-generic value, or "Classroom" / "TBA" if nothing better.
+ */
+function pickBestRoom(roomsField) {
+  if (!roomsField) return 'TBA';
+  const parts = roomsField.split(/;\s*/).map((s) => s.trim()).filter(Boolean);
+  // Prefer first real room (not Classroom / TBA)
+  const real = parts.find((p) => {
+    const lower = p.toLowerCase();
+    return lower !== 'classroom' && lower !== 'tba' && lower !== '';
+  });
+  return real || parts[0] || 'TBA';
+}
+
+/**
+ * If a student selection row has room = "Classroom" or "TBA", look up the actual
+ * room from the master schedule by matching course code + day + time overlap.
+ * Also updates the _courseRef on the flat session so StudentProfile shows real rooms.
+ */
+function resolveRooms(flatSessionsList, masterList) {
+  const byCode = new Map();
+  for (const m of masterList) {
+    if (!m.code) continue;
+    if (!byCode.has(m.code)) byCode.set(m.code, []);
+    byCode.get(m.code).push(m);
+  }
+  for (const s of flatSessionsList) {
+    const r = (s.room || '').toLowerCase();
+    if (r && r !== 'classroom' && r !== 'tba') continue;
+    const candidates = byCode.get(s.code) || [];
+    for (const c of candidates) {
+      if (c.day !== s.day) continue;
+      // overlap check
+      if (!(s.end <= c.start || s.start >= c.end)) {
+        const resolvedRoom = c.room || s.room;
+        s.room = resolvedRoom;
+        // Also update the student course object so StudentProfile shows the real room
+        if (s._courseRef) s._courseRef.room = resolvedRoom;
+        break;
+      }
+    }
+  }
+  // Strip internal references
+  for (const s of flatSessionsList) delete s._courseRef;
+}
+
 export function buildStore({ selections, theory, lab }) {
   const studentsMap = new Map();
   const flatSessions = [];
@@ -66,7 +114,7 @@ export function buildStore({ selections, theory, lab }) {
       code: row.course_code || '',
       name: row.course_name || '',
       faculty: row.faculty || 'TBA',
-      room: row.rooms || 'TBA',
+      room: pickBestRoom(row.rooms),
       batch: row.batch_number || '',
       slots,
     };
@@ -94,6 +142,7 @@ export function buildStore({ selections, theory, lab }) {
         day: slot.day,
         start: slot.start,
         end: slot.end,
+        _courseRef: course,
       });
     }
   }
@@ -110,6 +159,8 @@ export function buildStore({ selections, theory, lab }) {
   const theoryNorm = theory.map((r) => normalizeMasterRow(r, 'theory')).filter(Boolean);
   const labNorm = lab.map((r) => normalizeMasterRow(r, 'lab')).filter(Boolean);
   const master = [...theoryNorm, ...labNorm];
+
+  resolveRooms(flatSessions, master);
 
   const roomSet = new Set(roomSetFromSelections);
   const masterRoomSet = new Set();
@@ -197,7 +248,7 @@ export async function buildStoreAsync({ selections, theory, lab }, { onProgress 
       code: row.course_code || '',
       name: row.course_name || '',
       faculty: row.faculty || 'TBA',
-      room: row.rooms || 'TBA',
+      room: pickBestRoom(row.rooms),
       batch: row.batch_number || '',
       slots,
     };
@@ -225,6 +276,7 @@ export async function buildStoreAsync({ selections, theory, lab }, { onProgress 
         day: slot.day,
         start: slot.start,
         end: slot.end,
+        _courseRef: course,
       });
     }
 
@@ -249,6 +301,8 @@ export async function buildStoreAsync({ selections, theory, lab }, { onProgress 
   const theoryNorm = theory.map((r) => normalizeMasterRow(r, 'theory')).filter(Boolean);
   const labNorm = lab.map((r) => normalizeMasterRow(r, 'lab')).filter(Boolean);
   const master = [...theoryNorm, ...labNorm];
+
+  resolveRooms(flatSessions, master);
 
   const roomSet = new Set(roomSetFromSelections);
   const masterRoomSet = new Set();
