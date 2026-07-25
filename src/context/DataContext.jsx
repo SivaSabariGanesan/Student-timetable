@@ -59,6 +59,7 @@ export function DataProvider({ children }) {
                 const studentsMap = new Map(s.studentsArray.map((st) => [st.reg, st]));
                 const byRoom = new Map(s.byRoomEntries || []);
                 const byFaculty = new Map(s.byFacultyEntries || []);
+                const attendeeIndex = new Map(s.attendeeIndexEntries || []);
                 const built = {
                   studentsMap,
                   studentIndex: s.studentIndex,
@@ -68,6 +69,7 @@ export function DataProvider({ children }) {
                   master: s.master,
                   byRoom,
                   byFaculty,
+                  attendeeIndex,
                   facets: s.facets,
                   counts: s.counts,
                 };

@@ -27,6 +27,11 @@ export default function RoomSearch() {
     return [...rows].sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day) || a.start - b.start);
   }, [store, selected]);
 
+  // Pre-compute attendee counts for all rows of the selected room in one pass
+  const attendeeCounts = useMemo(() => {
+    return schedule.map((row) => findAttendees(store, row).length);
+  }, [store, schedule]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -68,26 +73,23 @@ export default function RoomSearch() {
                 <h2 className="font-display text-lg font-semibold">{selected}</h2>
               </div>
               <div className="space-y-2 max-h-[60vh] overflow-y-auto scrollbar-thin">
-                {schedule.map((row, i) => {
-                  const attendees = findAttendees(store, row);
-                  return (
-                    <div key={i} className="border rule rounded-xl p-3.5">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <span className="eyebrow">{row.day}</span>
-                          <div className="font-medium mt-0.5">{row.name}</div>
-                          <div className="text-xs text-slate2-500 font-mono">{row.code} · {row.faculty}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-mono text-sm text-slate2-500">{formatMinutes(row.start)}–{formatMinutes(row.end)}</div>
-                          <div className="text-xs text-slate2-400 flex items-center gap-1 justify-end mt-0.5">
-                            <FiUsers size={11} /> ~{attendees.length || row.studentCount || '—'} students
-                          </div>
+                {schedule.map((row, i) => (
+                  <div key={i} className="border rule rounded-xl p-3.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <span className="eyebrow">{row.day}</span>
+                        <div className="font-medium mt-0.5">{row.name}</div>
+                        <div className="text-xs text-slate2-500 font-mono">{row.code} · {row.faculty}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono text-sm text-slate2-500">{formatMinutes(row.start)}–{formatMinutes(row.end)}</div>
+                        <div className="text-xs text-slate2-400 flex items-center gap-1 justify-end mt-0.5">
+                          <FiUsers size={11} /> ~{attendeeCounts[i] || row.studentCount || '—'} students
                         </div>
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             </div>
           )}

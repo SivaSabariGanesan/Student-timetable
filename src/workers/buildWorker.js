@@ -112,6 +112,7 @@ self.onmessage = async (ev) => {
         start: slot.start,
         end: slot.end,
         _courseRef: course,
+        _slotRef: slot,
       });
     }
 
@@ -136,30 +137,86 @@ self.onmessage = async (ev) => {
   const labNorm = lab.map((r) => normalizeMasterRow(r, 'lab')).filter(Boolean);
   const master = [...theoryNorm, ...labNorm];
 
-  // Resolve generic "Classroom" / "TBA" room labels using master schedule
-  const byCodeForResolve = new Map();
+  // Resolve room per flat session using type-aware master schedule lookup.
+  // Theory slot (≤55 min) → match theory master rows; lab slot → match lab rows.
+  // Falls back to course name when code is missing from master (electives).
+  const theoryByCode = new Map();
+  const labByCode    = new Map();
+  const theoryByName = new Map();
+  const labByName    = new Map();
+  const allByCode    = new Map();
   for (const m of master) {
-    if (!m.code) continue;
-    if (!byCodeForResolve.has(m.code)) byCodeForResolve.set(m.code, []);
-    byCodeForResolve.get(m.code).push(m);
+    const ck = m.code;
+    const nk = m.name ? m.name.trim().toLowerCase() : null;
+    const isT = m.type === 'theory';
+    if (ck) {
+      const cm = isT ? theoryByCode : labByCode;
+      if (!cm.has(ck)) cm.set(ck, []);
+      cm.get(ck).push(m);
+      if (!allByCode.has(ck)) allByCode.set(ck, []);
+      allByCode.get(ck).push(m);
+    }
+    if (nk) {
+      const nm = isT ? theoryByName : labByName;
+      if (!nm.has(nk)) nm.set(nk, []);
+      nm.get(nk).push(m);
+    }
   }
+  const findMatch = (cands, s) => {
+    for (const c of cands) {
+      if (c.day === s.day && !(s.end <= c.start || s.start >= c.end)) return c;
+    }
+    return null;
+  };
   for (const s of flatSessions) {
-    const r = (s.room || '').toLowerCase();
-    if (r && r !== 'classroom' && r !== 'tba') continue;
-    const candidates = byCodeForResolve.get(s.code) || [];
-    for (const c of candidates) {
-      if (c.day !== s.day) continue;
-      if (!(s.end <= c.start || s.start >= c.end)) {
-        const resolvedRoom = c.room || s.room;
-        s.room = resolvedRoom;
-        // Also update the student course object so it serializes with the real room
-        if (s._courseRef) s._courseRef.room = resolvedRoom;
-        break;
+    const isTheory = (s.end - s.start) <= 55;
+    const nk = s.courseName ? s.courseName.trim().toLowerCase() : null;
+    const primary = isTheory ? theoryByCode : labByCode;
+    const namePrimary = isTheory ? theoryByName : labByName;
+    const sets = [
+      primary.get(s.code) || [],
+      nk ? (namePrimary.get(nk) || []) : [],
+      allByCode.get(s.code) || [],
+    ];
+    let resolved = null;
+    for (const cands of sets) {
+      resolved = findMatch(cands, s);
+      if (resolved) break;
+    }
+    if (resolved && resolved.room && resolved.room.toLowerCase() !== 'tba') {
+      s.room = resolved.room;
+      // Update slot object so StudentProfile reads per-slot room
+      if (s._slotRef) s._slotRef.room = resolved.room;
+      // Update course-level room only when all slots are the same type
+      if (s._courseRef) {
+        if (s._courseRef._roomResolved !== 'mixed') {
+          const t = isTheory ? 'theory' : 'lab';
+          if (!s._courseRef._roomResolved) {
+            s._courseRef.room = resolved.room;
+            s._courseRef._roomResolved = t;
+          } else if (s._courseRef._roomResolved !== t) {
+            s._courseRef._roomResolved = 'mixed';
+          } else {
+            s._courseRef.room = resolved.room;
+          }
+        }
       }
     }
   }
   // Strip internal references before serialization
-  for (const s of flatSessions) delete s._courseRef;
+  for (const s of flatSessions) {
+    delete s._courseRef;
+    delete s._slotRef;
+  }
+
+  // Build attendeeIndex: "code|semester" -> unique student sessions (for fast lookup)
+  const attendeeIndexMap = new Map();
+  for (const s of flatSessions) {
+    const key = `${s.code}|${s.semester}`;
+    if (!attendeeIndexMap.has(key)) attendeeIndexMap.set(key, []);
+    const bucket = attendeeIndexMap.get(key);
+    if (!bucket.some((e) => e.reg === s.reg)) bucket.push(s);
+  }
 
   const roomSet = new Set(roomSetFromSelections);
   const masterRoomSet = new Set();
@@ -195,6 +252,7 @@ self.onmessage = async (ev) => {
     master,
     byRoomEntries: Array.from(byRoom.entries()),
     byFacultyEntries: Array.from(byFaculty.entries()),
+    attendeeIndexEntries: Array.from(attendeeIndexMap.entries()),
     facets: {
       faculty: Array.from(new Set([...facultySet, ...masterFacultySet])).sort(),
       rooms: Array.from(roomSet).sort(),

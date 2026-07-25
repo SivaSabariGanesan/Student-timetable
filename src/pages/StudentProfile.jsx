@@ -18,7 +18,10 @@ export default function StudentProfile() {
     const out = [];
     for (const course of student.courses) {
       for (const slot of course.slots) {
-        out.push({ ...slot, code: course.code, courseName: course.name, faculty: course.faculty, room: course.room });
+        // slot.room is set per-slot by resolveRooms (theory slots get classroom,
+        // lab slots get the lab room). Fall back to course.room if not resolved.
+        const room = slot.room || course.room;
+        out.push({ ...slot, code: course.code, courseName: course.name, faculty: course.faculty, room });
       }
     }
     return out;

@@ -50,35 +50,130 @@ function pickBestRoom(roomsField) {
 }
 
 /**
- * If a student selection row has room = "Classroom" or "TBA", look up the actual
- * room from the master schedule by matching course code + day + time overlap.
- * Also updates the _courseRef on the flat session so StudentProfile shows real rooms.
+ * Returns true if the slot duration looks like a theory period (≤55 min).
+ * Lab sessions are 90, 100, or 110 min. Theory slots are exactly 50 min.
+ */
+function isTheorySlot(start, end) {
+  return (end - start) <= 55;
+}
+
+/**
+ * Resolves the room for every flat session by looking up the master schedule
+ * (theory_schedule or lab_schedule) using course code + day + time overlap.
+ *
+ * Key insight: the `rooms` field in student_selections is a semicolon-joined list
+ * of ALL rooms for that course (theory classroom + all lab batch rooms). We cannot
+ * simply pick the "best" one for the whole course — a theory slot must get the
+ * theory classroom and a lab slot must get the lab room.
+ *
+ * Strategy:
+ *  - Theory slot (≤55 min) → match against theory master rows only
+ *  - Lab slot (>55 min)    → match against lab master rows only
+ *  - Fallback: match against all master rows (type-agnostic)
+ *  - If still unresolved, fall back to course name matching
+ *
+ * Also updates _courseRef so StudentProfile shows the correct room per slot.
  */
 function resolveRooms(flatSessionsList, masterList) {
-  const byCode = new Map();
+  // Separate theory and lab rows for type-aware lookup
+  const theoryByCode = new Map();
+  const labByCode    = new Map();
+  const theoryByName = new Map();
+  const labByName    = new Map();
+  const allByCode    = new Map();
+
   for (const m of masterList) {
-    if (!m.code) continue;
-    if (!byCode.has(m.code)) byCode.set(m.code, []);
-    byCode.get(m.code).push(m);
+    const codeKey = m.code;
+    const nameKey = m.name ? m.name.trim().toLowerCase() : null;
+    const isTheory = m.type === 'theory';
+
+    if (codeKey) {
+      const codeMap = isTheory ? theoryByCode : labByCode;
+      if (!codeMap.has(codeKey)) codeMap.set(codeKey, []);
+      codeMap.get(codeKey).push(m);
+
+      if (!allByCode.has(codeKey)) allByCode.set(codeKey, []);
+      allByCode.get(codeKey).push(m);
+    }
+    if (nameKey) {
+      const nameMap = isTheory ? theoryByName : labByName;
+      if (!nameMap.has(nameKey)) nameMap.set(nameKey, []);
+      nameMap.get(nameKey).push(m);
+    }
   }
-  for (const s of flatSessionsList) {
-    const r = (s.room || '').toLowerCase();
-    if (r && r !== 'classroom' && r !== 'tba') continue;
-    const candidates = byCode.get(s.code) || [];
+
+  const findMatch = (candidates, s) => {
     for (const c of candidates) {
       if (c.day !== s.day) continue;
-      // overlap check
-      if (!(s.end <= c.start || s.start >= c.end)) {
-        const resolvedRoom = c.room || s.room;
-        s.room = resolvedRoom;
-        // Also update the student course object so StudentProfile shows the real room
-        if (s._courseRef) s._courseRef.room = resolvedRoom;
-        break;
+      if (!(s.end <= c.start || s.start >= c.end)) return c;
+    }
+    return null;
+  };
+
+  for (const s of flatSessionsList) {
+    const theory = isTheorySlot(s.start, s.end);
+    const nameKey = s.courseName ? s.courseName.trim().toLowerCase() : null;
+
+    // Build candidate list: type-specific by code → type-specific by name → all by code
+    const byCodePrimary = theory ? theoryByCode : labByCode;
+    const byNamePrimary = theory ? theoryByName : labByName;
+
+    const candidateSets = [
+      byCodePrimary.get(s.code) || [],
+      nameKey ? (byNamePrimary.get(nameKey) || []) : [],
+      allByCode.get(s.code) || [],            // type-agnostic fallback
+    ];
+
+    let resolved = null;
+    for (const candidates of candidateSets) {
+      resolved = findMatch(candidates, s);
+      if (resolved) break;
+    }
+
+    if (resolved && resolved.room && resolved.room.toLowerCase() !== 'tba') {
+      s.room = resolved.room;
+      // Store per-slot room directly on the slot object so StudentProfile can read it
+      if (s._slotRef) s._slotRef.room = resolved.room;
+      if (s._courseRef) {
+        // Only update the course-level room if this is the only type of slot
+        // (avoids overwriting a correctly-set lab room with a theory room or vice versa)
+        // We track per-slot room directly; course.room is now less important
+        // but we still set it so simple consumers that read course.room get something sensible.
+        if (s._courseRef._roomResolved !== 'mixed') {
+          if (!s._courseRef._roomResolved) {
+            s._courseRef.room = resolved.room;
+            s._courseRef._roomResolved = theory ? 'theory' : 'lab';
+          } else if (s._courseRef._roomResolved !== (theory ? 'theory' : 'lab')) {
+            s._courseRef._roomResolved = 'mixed'; // don't overwrite with wrong type
+          } else {
+            s._courseRef.room = resolved.room;
+          }
+        }
       }
     }
   }
-  // Strip internal references
-  for (const s of flatSessionsList) delete s._courseRef;
+
+  // Strip internal tracking flags before storing
+  for (const s of flatSessionsList) {
+    delete s._courseRef;
+    delete s._slotRef;
+  }
+}
+
+/**
+ * Builds a Map keyed by "code|semester" → unique student flat-session records.
+ * Used by findAttendees for O(1) lookup instead of a full flatSessions scan.
+ */
+function buildAttendeeIndex(flatSessions) {
+  const index = new Map();
+  for (const s of flatSessions) {
+    const key = `${s.code}|${s.semester}`;
+    if (!index.has(key)) index.set(key, []);
+    const bucket = index.get(key);
+    // Deduplicate by reg — only keep first occurrence per student
+    if (!bucket.some((e) => e.reg === s.reg)) bucket.push(s);
+  }
+  return index;
 }
 
 export function buildStore({ selections, theory, lab }) {
@@ -143,6 +238,7 @@ export function buildStore({ selections, theory, lab }) {
         start: slot.start,
         end: slot.end,
         _courseRef: course,
+        _slotRef: slot,
       });
     }
   }
@@ -195,6 +291,7 @@ export function buildStore({ selections, theory, lab }) {
     master,
     byRoom,
     byFaculty,
+    attendeeIndex: buildAttendeeIndex(flatSessions),
     facets: {
       faculty: Array.from(new Set([...facultySet, ...masterFacultySet])).sort(),
       rooms: Array.from(roomSet).sort(),
@@ -277,6 +374,7 @@ export async function buildStoreAsync({ selections, theory, lab }, { onProgress 
         start: slot.start,
         end: slot.end,
         _courseRef: course,
+        _slotRef: slot,
       });
     }
 
@@ -337,6 +435,7 @@ export async function buildStoreAsync({ selections, theory, lab }, { onProgress 
     master,
     byRoom,
     byFaculty,
+    attendeeIndex: buildAttendeeIndex(flatSessions),
     facets: {
       faculty: Array.from(new Set([...facultySet, ...masterFacultySet])).sort(),
       rooms: Array.from(roomSet).sort(),
@@ -354,7 +453,14 @@ export async function buildStoreAsync({ selections, theory, lab }, { onProgress 
 }
 
 // Best-effort attendee lookup for a master-schedule row: matches by course code + semester.
+// Uses a pre-built index (store.attendeeIndex) if available, else falls back to linear scan.
 export function findAttendees(store, row) {
+  // Fast path: use pre-built index keyed by "code|semester"
+  if (store.attendeeIndex) {
+    const key = `${row.code}|${row.semester}`;
+    return store.attendeeIndex.get(key) || [];
+  }
+  // Fallback linear scan
   const sem = String(row.semester);
   const seen = new Set();
   const out = [];
