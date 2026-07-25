@@ -6,19 +6,31 @@ const pool = new pg.Pool({
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
+  // Enforce SSL in production — Neon requires it; protects credentials in transit.
+  ssl: env.nodeEnv === 'production' ? { rejectUnauthorized: true } : false,
 });
 
 pool.on('error', (err) => {
-  console.error('Unexpected pool error', err);
+  // Log pool errors without exposing connection string details.
+  console.error('Unexpected DB pool error:', err.message);
 });
 
 export async function query(text, params) {
   const start = Date.now();
   const result = await pool.query(text, params);
   const duration = Date.now() - start;
+
   if (duration > 100) {
-    console.debug('Slow query', { text: text.slice(0, 100), duration, rows: result.rowCount });
+    // V10 [Medium]: Never log query text in production — it may contain
+    // parameterised values that were interpolated by the caller, or reveal
+    // table/column structure useful to an attacker reading server logs.
+    if (env.nodeEnv !== 'production') {
+      console.debug('Slow query (%dms): %s', duration, text.slice(0, 120));
+    } else {
+      console.warn('Slow query detected (%dms)', duration);
+    }
   }
+
   return result;
 }
 
