@@ -27,7 +27,9 @@ export async function importTimetable() {
   const theoryRows = [];
   await new Promise((resolve, reject) => {
     fs.createReadStream(THEORY_CSV, { encoding: 'utf-8' })
-      .pipe(csv())
+      .pipe(csv({
+        mapHeaders: ({ header }) => header.replace(/^\uFEFF/, ''),
+      }))
       .on('data', (row) => theoryRows.push(row))
       .on('end', resolve)
       .on('error', reject);
@@ -78,7 +80,9 @@ export async function importTimetable() {
   const labRows = [];
   await new Promise((resolve, reject) => {
     fs.createReadStream(LAB_CSV, { encoding: 'utf-8' })
-      .pipe(csv())
+      .pipe(csv({
+        mapHeaders: ({ header }) => header.replace(/^\uFEFF/, ''),
+      }))
       .on('data', (row) => labRows.push(row))
       .on('end', resolve)
       .on('error', reject);

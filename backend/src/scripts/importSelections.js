@@ -14,7 +14,9 @@ export async function importSelections() {
 
   await new Promise((resolve, reject) => {
     fs.createReadStream(CSV_PATH, { encoding: 'utf-8' })
-      .pipe(csv())
+      .pipe(csv({
+        mapHeaders: ({ header }) => header.replace(/^\uFEFF/, ''),
+      }))
       .on('data', (row) => rows.push(row))
       .on('end', resolve)
       .on('error', reject);
