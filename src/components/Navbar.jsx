@@ -21,9 +21,9 @@ export default function Navbar() {
           <div className="w-8 h-8 rounded-lg bg-ink-900 dark:bg-amber-500 flex items-center justify-center">
             <span className="font-display font-semibold text-amber-400 dark:text-ink-950 text-sm">R</span>
           </div>
-          <div className="leading-none">
-            <div className="font-display font-semibold text-[15px]">Rajalakshmi</div>
-            <div className="eyebrow -mt-0.5">Timetable</div>
+          <div>
+            <div className="font-display font-semibold text-[15px] leading-tight">Rajalakshmi</div>
+            <div className="eyebrow">Timetable</div>
           </div>
         </NavLink>
 
