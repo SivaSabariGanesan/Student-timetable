@@ -75,12 +75,12 @@ function isTheorySlot(start, end) {
  * Also updates _courseRef so StudentProfile shows the correct room per slot.
  */
 function resolveRooms(flatSessionsList, masterList) {
-  // Separate theory and lab rows for type-aware lookup
   const theoryByCode = new Map();
   const labByCode    = new Map();
   const theoryByName = new Map();
   const labByName    = new Map();
-  const allByCode    = new Map();
+  const theoryByPrefix = new Map();
+  const labByPrefix    = new Map();
 
   for (const m of masterList) {
     const codeKey = m.code;
@@ -92,8 +92,12 @@ function resolveRooms(flatSessionsList, masterList) {
       if (!codeMap.has(codeKey)) codeMap.set(codeKey, []);
       codeMap.get(codeKey).push(m);
 
-      if (!allByCode.has(codeKey)) allByCode.set(codeKey, []);
-      allByCode.get(codeKey).push(m);
+      const prefix = codeKey.slice(0, 6);
+      if (prefix.length >= 4) {
+        const prefixMap = isTheory ? theoryByPrefix : labByPrefix;
+        if (!prefixMap.has(prefix)) prefixMap.set(prefix, []);
+        prefixMap.get(prefix).push(m);
+      }
     }
     if (nameKey) {
       const nameMap = isTheory ? theoryByName : labByName;
@@ -111,17 +115,18 @@ function resolveRooms(flatSessionsList, masterList) {
   };
 
   for (const s of flatSessionsList) {
-    const theory = isTheorySlot(s.start, s.end);
+    const isTheory = isTheorySlot(s.start, s.end);
     const nameKey = s.courseName ? s.courseName.trim().toLowerCase() : null;
+    const byCode = isTheory ? theoryByCode : labByCode;
+    const byName = isTheory ? theoryByName : labByName;
+    const byPrefix = isTheory ? theoryByPrefix : labByPrefix;
 
-    // Build candidate list: type-specific by code → type-specific by name → all by code
-    const byCodePrimary = theory ? theoryByCode : labByCode;
-    const byNamePrimary = theory ? theoryByName : labByName;
+    const codePrefix = s.code ? s.code.slice(0, 6) : null;
 
     const candidateSets = [
-      byCodePrimary.get(s.code) || [],
-      nameKey ? (byNamePrimary.get(nameKey) || []) : [],
-      allByCode.get(s.code) || [],            // type-agnostic fallback
+      byCode.get(s.code) || [],
+      nameKey ? (byName.get(nameKey) || []) : [],
+      codePrefix && codePrefix.length >= 4 ? (byPrefix.get(codePrefix) || []) : [],
     ];
 
     let resolved = null;
@@ -132,19 +137,14 @@ function resolveRooms(flatSessionsList, masterList) {
 
     if (resolved && resolved.room && resolved.room.toLowerCase() !== 'tba') {
       s.room = resolved.room;
-      // Store per-slot room directly on the slot object so StudentProfile can read it
       if (s._slotRef) s._slotRef.room = resolved.room;
       if (s._courseRef) {
-        // Only update the course-level room if this is the only type of slot
-        // (avoids overwriting a correctly-set lab room with a theory room or vice versa)
-        // We track per-slot room directly; course.room is now less important
-        // but we still set it so simple consumers that read course.room get something sensible.
         if (s._courseRef._roomResolved !== 'mixed') {
           if (!s._courseRef._roomResolved) {
             s._courseRef.room = resolved.room;
-            s._courseRef._roomResolved = theory ? 'theory' : 'lab';
-          } else if (s._courseRef._roomResolved !== (theory ? 'theory' : 'lab')) {
-            s._courseRef._roomResolved = 'mixed'; // don't overwrite with wrong type
+            s._courseRef._roomResolved = isTheory ? 'theory' : 'lab';
+          } else if (s._courseRef._roomResolved !== (isTheory ? 'theory' : 'lab')) {
+            s._courseRef._roomResolved = 'mixed';
           } else {
             s._courseRef.room = resolved.room;
           }
@@ -153,7 +153,6 @@ function resolveRooms(flatSessionsList, masterList) {
     }
   }
 
-  // Strip internal tracking flags before storing
   for (const s of flatSessionsList) {
     delete s._courseRef;
     delete s._slotRef;

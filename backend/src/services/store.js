@@ -75,7 +75,8 @@ function resolveRooms(flatSessions, master) {
   const labByCode = new Map();
   const theoryByName = new Map();
   const labByName = new Map();
-  const allByCode = new Map();
+  const theoryByPrefix = new Map();
+  const labByPrefix = new Map();
 
   for (const m of master) {
     const codeKey = m.code;
@@ -86,8 +87,13 @@ function resolveRooms(flatSessions, master) {
       const codeMap = isTheory ? theoryByCode : labByCode;
       if (!codeMap.has(codeKey)) codeMap.set(codeKey, []);
       codeMap.get(codeKey).push(m);
-      if (!allByCode.has(codeKey)) allByCode.set(codeKey, []);
-      allByCode.get(codeKey).push(m);
+      // Also index by first 6 chars for broader matching
+      const prefix = codeKey.slice(0, 6);
+      if (prefix.length >= 4) {
+        const prefixMap = isTheory ? theoryByPrefix : labByPrefix;
+        if (!prefixMap.has(prefix)) prefixMap.set(prefix, []);
+        prefixMap.get(prefix).push(m);
+      }
     }
     if (nameKey) {
       const nameMap = isTheory ? theoryByName : labByName;
@@ -107,15 +113,18 @@ function resolveRooms(flatSessions, master) {
   const roomUpdates = [];
 
   for (const s of flatSessions) {
-    const theory = isTheorySlot(s.start, s.end);
+    const isTheory = isTheorySlot(s.start, s.end);
     const nameKey = s.courseName ? s.courseName.trim().toLowerCase() : null;
-    const byCodePrimary = theory ? theoryByCode : labByCode;
-    const byNamePrimary = theory ? theoryByName : labByName;
+    const byCode = isTheory ? theoryByCode : labByCode;
+    const byName = isTheory ? theoryByName : labByName;
+    const byPrefix = isTheory ? theoryByPrefix : labByPrefix;
+
+    const codePrefix = s.code ? s.code.slice(0, 6) : null;
 
     const candidateSets = [
-      byCodePrimary.get(s.code) || [],
-      nameKey ? (byNamePrimary.get(nameKey) || []) : [],
-      allByCode.get(s.code) || [],
+      byCode.get(s.code) || [],
+      nameKey ? (byName.get(nameKey) || []) : [],
+      codePrefix && codePrefix.length >= 4 ? (byPrefix.get(codePrefix) || []) : [],
     ];
 
     let resolved = null;
@@ -162,6 +171,7 @@ export async function buildStore() {
 
   const studentsMap = new Map();
   const flatSessions = [];
+  const slotLookup = new Map();
   const facultySet = new Set();
   const roomSetFromSelections = new Set();
   const deptSet = new Set();
@@ -208,7 +218,7 @@ export async function buildStore() {
     if (student.section) sectionSet.add(student.section);
 
     for (const slot of slots) {
-      flatSessions.push({
+      const session = {
         reg,
         name: student.name,
         deptName: student.deptName,
@@ -222,7 +232,10 @@ export async function buildStore() {
         day: slot.day,
         start: slot.start,
         end: slot.end,
-      });
+      };
+      flatSessions.push(session);
+      const key = `${reg}|${course.code}|${slot.day}|${slot.start}|${slot.end}`;
+      slotLookup.set(key, slot);
     }
   }
 
@@ -280,6 +293,13 @@ export async function buildStore() {
   const master = [...theoryNorm, ...labNorm];
 
   resolveRooms(flatSessions, master);
+
+  // Propagate resolved rooms back to course slot objects
+  for (const s of flatSessions) {
+    const key = `${s.reg}|${s.code}|${s.day}|${s.start}|${s.end}`;
+    const slot = slotLookup.get(key);
+    if (slot) slot.room = s.room;
+  }
 
   const roomSet = new Set(roomSetFromSelections);
   const masterRoomSet = new Set();
