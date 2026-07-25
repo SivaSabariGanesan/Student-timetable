@@ -16,7 +16,16 @@ import storeRoutes from './routes/store.js';
 const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(cors({ origin: env.corsOrigin, credentials: true }));
+const allowedOrigins = env.corsOrigin.split(',').map((s) => s.trim().replace(/\/$/, ''));
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    const normalized = origin.replace(/\/$/, '');
+    if (allowedOrigins.some((o) => o === normalized)) return cb(null, true);
+    cb(null, false);
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(cookieParser());
 
