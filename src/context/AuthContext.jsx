@@ -9,6 +9,14 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  function setToken(token) {
+    if (token) {
+      api.defaults.headers.common.Authorization = `Bearer ${token}`;
+    } else {
+      delete api.defaults.headers.common.Authorization;
+    }
+  }
+
   useEffect(() => {
     api.get('/auth/me')
       .then((res) => setUser(res.data.user))
@@ -19,22 +27,23 @@ export function AuthProvider({ children }) {
   async function login(email, password) {
     const res = await api.post('/auth/login', { email, password });
     setUser(res.data.user);
+    if (res.data.token) setToken(res.data.token);
     return res.data.user;
   }
 
   async function logout() {
     await api.post('/auth/logout');
+    setToken(null);
     setUser(null);
   }
 
-  /** True if the logged-in user has at least the given role rank. */
   function hasRole(role) {
     if (!user) return false;
     return (ROLE_RANK[user.role] ?? 0) >= (ROLE_RANK[role] ?? 0);
   }
 
   const isSuperuser = user?.role === 'superuser';
-  const isAdmin     = hasRole('admin');   // true for admin AND superuser
+  const isAdmin     = hasRole('admin');
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, hasRole, isAdmin, isSuperuser }}>

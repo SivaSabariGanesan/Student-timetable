@@ -46,7 +46,7 @@ export async function login(req, res, next) {
     const token = jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn });
 
     res.cookie('token', token, cookieOptions());
-    res.json({ user: payload });
+    res.json({ user: payload, token });
   } catch (err) {
     next(err);
   }
