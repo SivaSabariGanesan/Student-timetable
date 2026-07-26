@@ -60,7 +60,7 @@ function parseTimeParam(val) {
 
 function generateSlots(daySessions, dayStart, dayEnd, slotDuration) {
   dayStart = dayStart ?? 480;
-  dayEnd = dayEnd ?? 1080;
+  dayEnd = dayEnd ?? 1020;
   slotDuration = slotDuration ?? 50;
 
   const busy = daySessions

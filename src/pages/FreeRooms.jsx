@@ -40,7 +40,7 @@ export default function FreeRooms() {
         }
         cursor = Math.max(cursor, b.end);
       }
-      if (cursor < 1080) freeSlots.push({ start: cursor, end: 1080 });
+      if (cursor < 1020) freeSlots.push({ start: cursor, end: 1020 });
 
       const free = slot
         ? !daySessions.some((s) => s.start < slot.end && s.end > slot.start)
