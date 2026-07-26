@@ -1,19 +1,24 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import api from '../services/api';
+import { useAuth } from './AuthContext';
 
 const DataContext = createContext(null);
 
 export function DataProvider({ children }) {
-  const [status, setStatus] = useState('loading');
+  const { user } = useAuth();
+  const [status, setStatus] = useState('idle');
   const [progress, setProgress] = useState({});
   const [store, setStore] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!user) return;
+
     let cancelled = false;
 
     async function load() {
       try {
+        setStatus('loading');
         setProgress({ loading: 'Fetching data from server...' });
         const res = await api.get('/store');
         if (cancelled) return;
@@ -51,7 +56,7 @@ export function DataProvider({ children }) {
 
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [user]);
 
   const value = useMemo(() => ({ status, progress, store, error }), [status, progress, store, error]);
 

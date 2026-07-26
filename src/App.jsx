@@ -47,7 +47,7 @@ export default function App() {
   }
 
   // After login the data layer loads
-  if (user && status === 'loading') return <LoadingSkeleton progress={progress} />;
+  if (user && (status === 'loading' || status === 'idle')) return <LoadingSkeleton progress={progress} />;
 
   if (user && status === 'error') {
     return (
