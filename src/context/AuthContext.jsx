@@ -6,40 +6,37 @@ const TOKEN_KEY = 'timetable_token';
 
 const ROLE_RANK = { superuser: 3, admin: 2, user: 1 };
 
+function loadToken() {
+  try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+}
+function saveToken(token) {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {}
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  function setToken(token) {
-    if (token) {
-      api.defaults.headers.common.Authorization = `Bearer ${token}`;
-      try { localStorage.setItem(TOKEN_KEY, token); } catch {}
-    } else {
-      delete api.defaults.headers.common.Authorization;
-      try { localStorage.removeItem(TOKEN_KEY); } catch {}
-    }
-  }
-
   useEffect(() => {
-    const stored = localStorage.getItem(TOKEN_KEY);
-    if (stored) setToken(stored);
-
     api.get('/auth/me')
       .then((res) => setUser(res.data.user))
-      .catch(() => { setUser(null); setToken(null); })
+      .catch(() => { setUser(null); saveToken(null); })
       .finally(() => setLoading(false));
   }, []);
 
   async function login(email, password) {
     const res = await api.post('/auth/login', { email, password });
     setUser(res.data.user);
-    if (res.data.token) setToken(res.data.token);
+    if (res.data.token) saveToken(res.data.token);
     return res.data.user;
   }
 
   async function logout() {
     await api.post('/auth/logout');
-    setToken(null);
+    saveToken(null);
     setUser(null);
   }
 
