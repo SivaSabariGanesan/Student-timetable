@@ -103,6 +103,7 @@ export async function createUser(req, res, next) {
 
     const safeRole = (role || '').trim().toLowerCase();
     if (!VALID_ROLES.includes(safeRole)) {
+      console.error('[createUser] Invalid role value:', { role, safeRole, rawType: typeof role, chars: [...String(role)].map(c => c.charCodeAt(0)) });
       return res.status(400).json({ error: `Invalid role "${role}". Must be one of: ${VALID_ROLES.join(', ')}` });
     }
 
@@ -118,6 +119,10 @@ export async function createUser(req, res, next) {
   } catch (err) {
     if (err.code === '23505') {
       return res.status(409).json({ error: 'A user with that email already exists' });
+    }
+    if (err.code === '23514') {
+      console.error('[createUser] CHECK constraint violation. Role sent:', JSON.stringify({ role: req.body.role }));
+      return res.status(400).json({ error: `Invalid role value. Must be one of: ${VALID_ROLES.join(', ')}` });
     }
     next(err);
   }
