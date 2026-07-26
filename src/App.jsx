@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import StudentSearch from './pages/StudentSearch';
 import StudentProfile from './pages/StudentProfile';
 import RoomSearch from './pages/RoomSearch';
+import FreeRooms from './pages/FreeRooms';
 import FacultySearch from './pages/FacultySearch';
 import Explore from './pages/Explore';
 import Login from './pages/Login';
@@ -83,6 +84,7 @@ export default function App() {
           <Route path="/students" element={<RequireAuth><StudentSearch /></RequireAuth>} />
           <Route path="/students/:reg" element={<RequireAuth><StudentProfile /></RequireAuth>} />
           <Route path="/rooms" element={<RequireAuth><RoomSearch /></RequireAuth>} />
+          <Route path="/rooms/free" element={<RequireAuth><FreeRooms /></RequireAuth>} />
           <Route path="/faculty" element={<RequireAuth><FacultySearch /></RequireAuth>} />
           <Route path="/explore" element={<RequireAuth><Explore /></RequireAuth>} />
           <Route

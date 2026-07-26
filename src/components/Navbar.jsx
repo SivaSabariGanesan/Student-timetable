@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FiGrid, FiUser, FiMapPin, FiUsers, FiSliders, FiMenu, FiX, FiLogOut, FiShield } from 'react-icons/fi';
+import { FiGrid, FiUser, FiMapPin, FiUsers, FiSliders, FiMenu, FiX, FiLogOut, FiShield, FiClock } from 'react-icons/fi';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '../context/AuthContext';
 
 const BASE_LINKS = [
-  { to: '/',        label: 'Dashboard',    icon: FiGrid,    end: true },
-  { to: '/students',label: 'Find Student', icon: FiUser },
-  { to: '/explore', label: 'Explore',      icon: FiSliders },
-  { to: '/rooms',   label: 'Rooms',        icon: FiMapPin },
-  { to: '/faculty', label: 'Faculty',      icon: FiUsers },
+  { to: '/',          label: 'Dashboard',    icon: FiGrid,    end: true },
+  { to: '/students',  label: 'Find Student', icon: FiUser },
+  { to: '/explore',   label: 'Explore',      icon: FiSliders },
+  { to: '/rooms',     label: 'Rooms',        icon: FiMapPin,    end: true },
+  { to: '/rooms/free',label: 'Free Rooms',   icon: FiClock },
+  { to: '/faculty',   label: 'Faculty',      icon: FiUsers },
 ];
 
 const ROLE_LABEL = {
