@@ -149,7 +149,7 @@ export default function TimetableGrid({ sessions, todayLabel }) {
                   const clampedStart = Math.max(s.start, DAY_START);
                   const clampedEnd   = Math.min(s.end,   DAY_END);
                   const top  = (clampedStart - DAY_START) * PX_PER_MIN;
-                  const h    = Math.max((clampedEnd - clampedStart) * PX_PER_MIN, 36);
+                  const h    = Math.max((clampedEnd - clampedStart) * PX_PER_MIN, 44);
                   const c    = colorForCode(s.code);
 
                   const leftPct  = (lane / totalLanes) * 100;
@@ -211,7 +211,7 @@ export default function TimetableGrid({ sessions, todayLabel }) {
           </div>
           <button
             onClick={() => setSelected(null)}
-            className="ml-auto text-xs text-slate2-400 hover:text-ink-900 dark:hover:text-paper-100 px-2 py-1 rounded"
+            className="ml-auto text-xs text-slate2-400 hover:text-ink-900 dark:hover:text-paper-100 px-3 py-2 rounded-lg"
           >
             ✕ Close
           </button>

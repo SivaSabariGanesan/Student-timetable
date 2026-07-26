@@ -222,7 +222,7 @@ export default function UserManagement() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg bg-ink-900 dark:bg-amber-500 text-amber-400 dark:text-ink-950 text-sm font-medium hover:opacity-90 transition-opacity shrink-0"
+          className="flex items-center gap-2 px-4 sm:px-4 py-3 rounded-lg bg-ink-900 dark:bg-amber-500 text-amber-400 dark:text-ink-950 text-sm font-medium hover:opacity-90 transition-opacity shrink-0"
         >
           <FiUserPlus size={15} />
           <span className="hidden xs:inline">New User</span>
@@ -253,7 +253,7 @@ export default function UserManagement() {
                 {canChangeRole(u) && roleOptions(u).length > 0 && (
                   <button
                     onClick={() => applyRoleChange(u)}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border rule text-xs font-medium hover:bg-ink-900/5 dark:hover:bg-paper-100/10 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-lg border rule text-xs font-medium hover:bg-ink-900/5 dark:hover:bg-paper-100/10 transition-colors"
                   >
                     <FiShield size={12} />
                     {roleOptions(u).length === 1 ? `Promote to ${roleOptions(u)[0]}` : 'Change role'}
@@ -262,7 +262,7 @@ export default function UserManagement() {
                 {canDelete(u) && (
                   <button
                     onClick={() => handleDelete(u)}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-200 dark:border-red-800 text-xs font-medium text-bad hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    className="flex items-center gap-1.5 px-4 py-3 rounded-lg border border-red-200 dark:border-red-800 text-xs font-medium text-bad hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     aria-label={`Delete ${u.name}`}
                   >
                     <FiTrash2 size={13} /> Delete
@@ -299,7 +299,7 @@ export default function UserManagement() {
                     {canChangeRole(u) && roleOptions(u).length > 0 && (
                       <button
                         onClick={() => applyRoleChange(u)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border rule text-xs font-medium hover:bg-ink-900/5 dark:hover:bg-paper-100/10 transition-colors whitespace-nowrap"
+                        className="flex items-center gap-1 px-3 py-2 rounded-lg border rule text-xs font-medium hover:bg-ink-900/5 dark:hover:bg-paper-100/10 transition-colors whitespace-nowrap"
                       >
                         <FiShield size={12} />
                         {roleOptions(u).length === 1
@@ -310,7 +310,7 @@ export default function UserManagement() {
                     {canDelete(u) && (
                       <button
                         onClick={() => handleDelete(u)}
-                        className="p-1.5 rounded-lg text-slate2-400 hover:text-bad hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        className="p-2 rounded-lg text-slate2-400 hover:text-bad hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                         title="Delete user"
                         aria-label={`Delete ${u.name}`}
                       >

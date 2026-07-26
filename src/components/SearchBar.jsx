@@ -64,7 +64,7 @@ export default function SearchBar({
               onChange('');
               setOpen(false);
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate2-400 hover:text-ink-900 dark:hover:text-paper-100"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate2-400 hover:text-ink-900 dark:hover:text-paper-100"
             aria-label="Clear"
           >
             <FiX size={16} />
@@ -81,7 +81,7 @@ export default function SearchBar({
                   onSelect(item);
                   setOpen(false);
                 }}
-                className={`w-full text-left px-4 py-2.5 text-sm ${
+                className={`w-full text-left px-4 py-3 text-sm ${
                   i === highlight ? 'bg-amber-400/15' : 'hover:bg-ink-900/5 dark:hover:bg-paper-100/5'
                 }`}
               >

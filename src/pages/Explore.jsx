@@ -97,7 +97,7 @@ export default function Explore() {
           </div>
 
           {/* ── Desktop: compact table rows ── */}
-          <div className="hidden sm:block card divide-y rule overflow-hidden">
+          <div className="hidden sm:block card divide-y rule overflow-x-auto">
             {filtered.map((s, i) => {
               const c = colorForCode(s.code);
               return (

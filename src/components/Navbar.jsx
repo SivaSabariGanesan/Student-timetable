@@ -80,7 +80,7 @@ export default function Navbar() {
           )}
           <ThemeToggle />
           <button
-            className="md:hidden w-9 h-9 rounded-full flex items-center justify-center border rule"
+            className="md:hidden w-11 h-11 rounded-full flex items-center justify-center border rule"
             onClick={() => setOpen((o) => !o)}
             aria-label="Toggle menu"
           >

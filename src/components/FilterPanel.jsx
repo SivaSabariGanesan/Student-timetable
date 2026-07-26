@@ -13,7 +13,7 @@ function Select({ label, value, onChange, options }) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg border rule bg-white dark:bg-ink-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/60"
+        className="w-full px-3 py-2.5 rounded-lg border rule bg-white dark:bg-ink-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/60"
       >
         <option value="">Any</option>
         {options.map((o) => (
@@ -46,7 +46,7 @@ export default function FilterPanel({ filters, setFilter, clearAll, facets }) {
             value={filters.q}
             onChange={(e) => setFilter('q', e.target.value)}
             placeholder="e.g. 230701321 or name"
-            className="w-full px-3 py-2 rounded-lg border rule bg-white dark:bg-ink-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/60"
+            className="w-full px-3 py-2.5 rounded-lg border rule bg-white dark:bg-ink-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/60"
           />
         </label>
 

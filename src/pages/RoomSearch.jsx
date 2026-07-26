@@ -76,7 +76,7 @@ export default function RoomSearch() {
           <div className="card p-4">
             <button
               onClick={() => setSelected(null)}
-              className="flex items-center gap-1.5 text-sm text-slate2-500 hover:text-ink-900 dark:hover:text-paper-100 mb-4"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate2-500 hover:text-ink-900 dark:hover:text-paper-100 mb-4 rounded-lg hover:bg-ink-900/5 dark:hover:bg-paper-100/10"
             >
               <FiArrowLeft size={14} /> Back to rooms
             </button>

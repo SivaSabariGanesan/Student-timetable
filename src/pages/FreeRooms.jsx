@@ -75,7 +75,7 @@ export default function FreeRooms() {
           <button
             key={d}
             onClick={() => setDay(d)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-w-[48px] ${
               day === d
                 ? 'bg-ink-900 dark:bg-amber-500 text-amber-400 dark:text-ink-950'
                 : 'border rule hover:bg-ink-900/5 dark:hover:bg-paper-100/10'
@@ -90,7 +90,7 @@ export default function FreeRooms() {
         <span className="eyebrow mr-1">Time slot:</span>
         <button
           onClick={() => setSlot(null)}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+          className={`px-4 py-2.5 rounded-lg text-xs font-medium transition-colors ${
             !slot
               ? 'bg-ink-900 dark:bg-amber-500 text-amber-400 dark:text-ink-950'
               : 'border rule hover:bg-ink-900/5 dark:hover:bg-paper-100/10'
@@ -102,7 +102,7 @@ export default function FreeRooms() {
           <button
             key={s.label}
             onClick={() => setSlot(s)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-colors ${
+            className={`px-4 py-2.5 rounded-lg text-xs font-mono transition-colors ${
               slot?.label === s.label
                 ? 'bg-ink-900 dark:bg-amber-500 text-amber-400 dark:text-ink-950'
                 : 'border rule hover:bg-ink-900/5 dark:hover:bg-paper-100/10'

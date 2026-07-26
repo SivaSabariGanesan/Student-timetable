@@ -42,7 +42,7 @@ export default function Login() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border rule bg-white dark:bg-ink-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/60"
+              className="w-full px-4 py-3 rounded-lg border rule bg-white dark:bg-ink-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/60"
               placeholder="admin@rajalakshmi.edu.in"
               required
             />
@@ -53,7 +53,7 @@ export default function Login() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border rule bg-white dark:bg-ink-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/60"
+              className="w-full px-4 py-3 rounded-lg border rule bg-white dark:bg-ink-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/60"
               placeholder="••••••••"
               required
             />
@@ -66,7 +66,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={busy}
-            className="w-full py-2.5 rounded-lg bg-ink-900 dark:bg-amber-500 text-amber-400 dark:text-ink-950 font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="w-full py-3 rounded-lg bg-ink-900 dark:bg-amber-500 text-amber-400 dark:text-ink-950 font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {busy ? 'Signing in...' : 'Sign in'}
           </button>
