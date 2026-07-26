@@ -1,6 +1,41 @@
-# Rajalakshmi Timetable Portal
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:646CFF,100:339933&height=180&section=header&text=Rajalakshmi%20Timetable%20Portal&fontSize=36&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=CSV%20%E2%86%92%20Searchable%2C%20Role-Gated%20Timetable%20System&descAlignY=58&descSize=16" width="100%" alt="header" />
+</p>
 
-A full-stack university timetable portal built with React + Vite + Tailwind on the frontend and Node.js + Express + PostgreSQL on the backend. Turns three CSV exports into a searchable, personalized timetable portal with role-based user management.
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=20&pause=1000&color=339933&center=true&vCenter=true&width=650&lines=React+%2B+Vite+%2B+Tailwind+frontend;Node.js+%2B+Express+%2B+PostgreSQL+backend;3-tier+role-based+auth+with+JWT;CSV+imports+%E2%86%92+searchable+timetables" alt="Typing SVG" />
+</p>
+
+<p align="center">
+  <img alt="Node" src="https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white">
+  <img alt="React" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black">
+  <img alt="Vite" src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white">
+  <img alt="Postgres" src="https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql&logoColor=white">
+  <img alt="Redis" src="https://img.shields.io/badge/Redis-Cache-DC382D?logo=redis&logoColor=white">
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-informational">
+</p>
+
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=react,vite,tailwind,nodejs,express,postgres,redis,js&theme=dark" alt="tech stack" />
+</p>
+
+---
+
+## Table of contents
+
+- [Stack](#stack)
+- [Project structure](#project-structure)
+- [Getting started](#getting-started)
+- [Default accounts](#default-accounts)
+- [User roles](#user-roles)
+- [Pages](#pages)
+- [Features](#features)
+- [Data model notes](#data-model-notes)
+- [Backend scripts](#backend-scripts)
+- [Production build](#production-build)
+- [Linting](#linting)
+- [Roadmap](#roadmap)
+- [License](#license)
 
 ---
 
@@ -9,8 +44,8 @@ A full-stack university timetable portal built with React + Vite + Tailwind on t
 | Layer | Technology |
 |---|---|
 | Frontend | React 19, Vite 8, Tailwind CSS 3, Recharts, React Router 7 |
-| Backend | Node.js, Express 4, PostgreSQL (Neon), JWT (httpOnly cookies) |
-| Auth | bcrypt password hashing, JWT session tokens, 3-tier role system |
+| Backend | Node.js, Express 4, PostgreSQL (Neon), Redis (cache invalidation) |
+| Auth | bcrypt password hashing, JWT session tokens (httpOnly cookies), 3-tier role system |
 
 ---
 
@@ -24,7 +59,7 @@ Student-timetable/
 │       ├── controllers/      auth, users, students, rooms, faculty, …
 │       ├── middleware/        authenticate, authorize (role hierarchy)
 │       ├── routes/           REST route definitions
-│       ├── scripts/          seed.js, createSuperuser.js, import scripts
+│       ├── scripts/          seed.js, createSuperuser.js, reimport_all.py, import scripts
 │       └── services/         store builder (CSV → DB → JSON)
 ├── public/data/              CSV source files
 │   ├── student_selections_all_depts.csv
@@ -45,7 +80,9 @@ Student-timetable/
 ### Prerequisites
 
 - Node.js 20+
-- A PostgreSQL database (the project is configured for [Neon](https://neon.tech) serverless Postgres)
+- Python 3.10+ (only needed for the `reimport_all.py` repair/migration script)
+- A PostgreSQL database (configured for [Neon](https://neon.tech) serverless Postgres)
+- Redis (used for cache invalidation on data re-imports)
 
 ### 1. Backend setup
 
@@ -62,6 +99,7 @@ JWT_SECRET=a-long-random-secret-string
 PORT=3001
 NODE_ENV=development
 CORS_ORIGIN=http://localhost:5173
+REDIS_URL=redis://localhost:6379
 ```
 
 Seed the database (creates schema, default users, and imports all CSV data):
@@ -99,7 +137,7 @@ These are created by `npm run seed` in the backend:
 | Superuser | superuser@rajalakshmi.edu.in | super123 |
 | Admin | admin@rajalakshmi.edu.in | admin123 |
 
-> Change these passwords immediately after first login in a production deployment.
+> ⚠️ Change these passwords immediately after first login in a production deployment.
 
 ---
 
@@ -164,7 +202,7 @@ The app redirects unauthenticated visitors to `/login`. Authenticated users visi
 
 ## Data model notes
 
-- A student's timetable is built from `student_selections_all_depts.csv` which already carries course, faculty, room and the `slots` column (day + time for every meeting). No join is required against the master schedule for the student view.
+- A student's timetable is built from `student_selections_all_depts.csv`, which already carries course, faculty, room and the `slots` column (day + time for every meeting). No join is required against the master schedule for the student view.
 - Rooms and Faculty views read from `theory_schedule.csv` / `lab_schedule.csv` as the authoritative source for room numbers, blocks and capacities.
 - The "students attending" count on Room/Faculty views is a best-effort match on **course code + semester** — it's an estimate, not an exact roster, because the two data sources don't share a clean join key.
 - Theory slots with ambiguous hours (1–7) are normalized to PM in `src/utils/time.js` to match the campus clock convention.
@@ -179,6 +217,9 @@ The app redirects unauthenticated visitors to `/login`. Authenticated users visi
 | Create superuser | `node src/scripts/createSuperuser.js <email> "<name>" <password>` | Add/reset a superuser from the terminal |
 | Import selections | `npm run import:selections` | Re-import student selections CSV only |
 | Import timetable | `npm run import:timetable` | Re-import theory + lab CSVs only |
+| Full re-import (repair) | `python src/scripts/reimport_all.py --repair` | Idempotent re-import across all CSVs; safely preserves existing production timetable data (e.g. 4th-year sections) instead of overwriting it, and invalidates the Redis cache afterward |
+
+> The `--repair` flag is the safe path for re-running imports against a live database — prefer it over a full `npm run seed` once the portal is in production, since `seed` recreates schema and default accounts from scratch.
 
 ---
 
@@ -204,3 +245,21 @@ The frontend `dist/` folder is fully static and can be served from any CDN or st
 ```bash
 npm run lint      # runs oxlint on the frontend source
 ```
+
+---
+
+## Roadmap
+
+- [ ] Exact roster matching for Room/Faculty attendee counts (pending a shared join key across CSV sources)
+- [ ] Automated CSV validation on import (schema + slot-format checks before writing to Postgres)
+- [ ] Audit log for User Management actions (promote/demote/delete)
+
+---
+
+## License
+
+MIT — see `LICENSE` for details.
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:339933,100:646CFF&height=120&section=footer" width="100%" alt="footer" />
+</p>
