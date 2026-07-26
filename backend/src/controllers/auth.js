@@ -11,7 +11,7 @@ function cookieOptions() {
   return {
     httpOnly: true,                              // not readable by JS — blocks XSS token theft
     secure: env.nodeEnv === 'production',        // HTTPS-only in production
-    sameSite: env.nodeEnv === 'production' ? 'strict' : 'lax', // 'strict' in prod prevents CSRF
+    sameSite: env.nodeEnv === 'production' ? 'none' : 'lax',
     path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000,            // 7 days in ms
   };
