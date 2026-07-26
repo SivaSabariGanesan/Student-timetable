@@ -101,12 +101,17 @@ export async function createUser(req, res, next) {
       return res.status(403).json({ error: 'Cannot create a user with a higher role than your own' });
     }
 
+    const safeRole = (role || '').trim().toLowerCase();
+    if (!VALID_ROLES.includes(safeRole)) {
+      return res.status(400).json({ error: `Invalid role "${role}". Must be one of: ${VALID_ROLES.join(', ')}` });
+    }
+
     const hash = await bcrypt.hash(password, 12);
     const result = await query(
       `INSERT INTO users (email, password_hash, name, role)
        VALUES ($1, $2, $3, $4)
        RETURNING ${SELECT_COLS}`,
-      [email.toLowerCase().trim(), hash, name.trim(), role]
+      [email.toLowerCase().trim(), hash, name.trim(), safeRole]
     );
 
     res.status(201).json({ user: result.rows[0] });
