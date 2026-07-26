@@ -28,8 +28,8 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="card p-6 sm:p-8 w-full max-w-sm">
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-ink-900 dark:bg-amber-500 flex items-center justify-center mx-auto mb-3">
-            <span className="font-display font-semibold text-amber-400 dark:text-ink-950 text-lg">R</span>
+          <div className="w-16 h-16 mx-auto mb-3">
+            <img src="/reclogo.png" alt="REC Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="font-display text-xl font-semibold">Sign in</h1>
           <p className="text-sm text-slate2-500 mt-1">Access the admin dashboard</p>
