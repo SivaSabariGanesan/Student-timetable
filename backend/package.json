@@ -10,7 +10,8 @@
     "import": "node src/scripts/seed.js",
     "import:students": "node src/scripts/importStudents.js",
     "import:selections": "node src/scripts/importSelections.js",
-    "import:timetable": "node src/scripts/importTimetable.js"
+    "import:timetable": "node src/scripts/importTimetable.js",
+    "migrate:roles": "node src/scripts/migrateRoles.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
