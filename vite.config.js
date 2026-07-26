@@ -25,11 +25,9 @@ export default defineConfig({
 
     rollupOptions: {
       output: {
-        // Separate large third-party libraries into their own chunk so the
-        // app chunk stays cacheable independently of vendor updates.
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          charts: ['recharts'],
+        manualChunks(id) {
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-router')) return 'vendor';
+          if (id.includes('node_modules/recharts')) return 'charts';
         },
       },
     },
