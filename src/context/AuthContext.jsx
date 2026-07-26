@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import api from '../services/api';
 
 const AuthContext = createContext(null);
+const TOKEN_KEY = 'timetable_token';
 
 const ROLE_RANK = { superuser: 3, admin: 2, user: 1 };
 
@@ -12,15 +13,20 @@ export function AuthProvider({ children }) {
   function setToken(token) {
     if (token) {
       api.defaults.headers.common.Authorization = `Bearer ${token}`;
+      try { localStorage.setItem(TOKEN_KEY, token); } catch {}
     } else {
       delete api.defaults.headers.common.Authorization;
+      try { localStorage.removeItem(TOKEN_KEY); } catch {}
     }
   }
 
   useEffect(() => {
+    const stored = localStorage.getItem(TOKEN_KEY);
+    if (stored) setToken(stored);
+
     api.get('/auth/me')
       .then((res) => setUser(res.data.user))
-      .catch(() => setUser(null))
+      .catch(() => { setUser(null); setToken(null); })
       .finally(() => setLoading(false));
   }, []);
 
