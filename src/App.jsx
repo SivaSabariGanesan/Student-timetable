@@ -33,6 +33,25 @@ function RequireAdmin({ children }) {
   return children;
 }
 
+/**
+ * Blocks routes that are restricted for the basic `user` role.
+ * `user` role can only access /students, /students/:reg, and /explore.
+ */
+function RequireNotBasicUser({ children }) {
+  const { user } = useAuth();
+  if (user?.role === 'user') {
+    return <Navigate to="/students" replace />;
+  }
+  return children;
+}
+  const { isAdmin, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) return <LoadingSkeleton />;
+  if (!isAdmin) return <Navigate to="/" state={{ from: location }} replace />;
+  return children;
+}
+
 export default function App() {
   const { status, progress, error } = useData();
   const { user, loading: authLoading } = useAuth();
@@ -80,12 +99,12 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <Routes>
           <Route path="/login" element={<Navigate to="/" replace />} />
-          <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
+          <Route path="/" element={<RequireNotBasicUser><RequireAuth><Dashboard /></RequireAuth></RequireNotBasicUser>} />
           <Route path="/students" element={<RequireAuth><StudentSearch /></RequireAuth>} />
           <Route path="/students/:reg" element={<RequireAuth><StudentProfile /></RequireAuth>} />
-          <Route path="/rooms" element={<RequireAuth><RoomSearch /></RequireAuth>} />
-          <Route path="/rooms/free" element={<RequireAuth><FreeRooms /></RequireAuth>} />
-          <Route path="/faculty" element={<RequireAuth><FacultySearch /></RequireAuth>} />
+          <Route path="/rooms" element={<RequireNotBasicUser><RequireAuth><RoomSearch /></RequireAuth></RequireNotBasicUser>} />
+          <Route path="/rooms/free" element={<RequireNotBasicUser><RequireAuth><FreeRooms /></RequireAuth></RequireNotBasicUser>} />
+          <Route path="/faculty" element={<RequireNotBasicUser><RequireAuth><FacultySearch /></RequireAuth></RequireNotBasicUser>} />
           <Route path="/explore" element={<RequireAuth><Explore /></RequireAuth>} />
           <Route
             path="/users"

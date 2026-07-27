@@ -19,13 +19,17 @@ const ROLE_LABEL = {
   user:      { text: 'User',      cls: 'text-slate2-400' },
 };
 
+const USER_ONLY = ['/students', '/explore'];
+
 export default function Navbar() {
   const { user, logout, isAdmin } = useAuth();
   const [open, setOpen] = useState(false);
 
   const links = isAdmin
     ? [...BASE_LINKS, { to: '/users', label: 'Users', icon: FiShield }]
-    : BASE_LINKS;
+    : user?.role === 'user'
+      ? BASE_LINKS.filter((l) => USER_ONLY.includes(l.to))
+      : BASE_LINKS;
 
   const roleInfo = user ? (ROLE_LABEL[user.role] ?? ROLE_LABEL.user) : null;
 
