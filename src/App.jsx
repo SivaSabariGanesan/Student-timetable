@@ -12,6 +12,7 @@ import FacultySearch from './pages/FacultySearch';
 import Explore from './pages/Explore';
 import Login from './pages/Login';
 import UserManagement from './pages/UserManagement';
+import ChangePassword from './pages/ChangePassword';
 
 /** Redirect unauthenticated visitors to /login, preserving the intended destination. */
 function RequireAuth({ children }) {
@@ -104,6 +105,14 @@ export default function App() {
             element={
               <RequireAdmin>
                 <UserManagement />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path="/password"
+            element={
+              <RequireAdmin>
+                <ChangePassword />
               </RequireAdmin>
             }
           />

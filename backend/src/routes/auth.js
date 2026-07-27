@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { login, logout, me } from '../controllers/auth.js';
+import { login, logout, me, changePassword } from '../controllers/auth.js';
 import { authenticate } from '../middleware/auth.js';
 
 // V3 [Critical]: Dedicated, tight rate limiter for the login endpoint.
@@ -21,5 +21,6 @@ const router = Router();
 router.post('/login', loginLimiter, login);
 router.post('/logout', logout);
 router.get('/me', authenticate, me);
+router.post('/change-password', authenticate, changePassword);
 
 export default router;
