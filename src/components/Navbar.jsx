@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FiGrid, FiUser, FiMapPin, FiUsers, FiSliders, FiMenu, FiX, FiLogOut, FiShield, FiClock } from 'react-icons/fi';
+import { FiGrid, FiUser, FiMapPin, FiUsers, FiSliders, FiMenu, FiX, FiLogOut, FiShield, FiClock, FiLock } from 'react-icons/fi';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '../context/AuthContext';
 
@@ -26,7 +26,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   const links = isAdmin
-    ? [...BASE_LINKS, { to: '/users', label: 'Users', icon: FiShield }]
+    ? [...BASE_LINKS, { to: '/users', label: 'Users', icon: FiShield }, { to: '/password', label: 'Password', icon: FiLock }]
     : user?.role === 'user'
       ? BASE_LINKS.filter((l) => USER_ONLY.includes(l.to))
       : BASE_LINKS;
