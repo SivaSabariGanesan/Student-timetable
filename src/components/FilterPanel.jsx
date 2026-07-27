@@ -38,9 +38,9 @@ export default function FilterPanel({ filters, setFilter, clearAll, facets }) {
         )}
       </div>
 
+      {/* Register / Name — full width on all sizes */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Register / Name spans full width on mobile, 2 cols on sm+ */}
-        <label className="flex flex-col gap-1 sm:col-span-2 lg:col-span-2">
+        <label className="flex flex-col gap-1 col-span-1 sm:col-span-2 lg:col-span-2">
           <span className="eyebrow">Register / Name</span>
           <input
             value={filters.q}

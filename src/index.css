@@ -8,6 +8,9 @@
   }
   body {
     @apply bg-paper-100 text-ink-900 dark:bg-ink-950 dark:text-paper-100 font-sans antialiased;
+    /* Respect notched phones (iPhone X safe areas) */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
   ::selection {
     @apply bg-amber-400/40;
@@ -33,6 +36,9 @@
 @layer utilities {
   .scrollbar-thin::-webkit-scrollbar { height: 6px; width: 6px; }
   .scrollbar-thin::-webkit-scrollbar-thumb { @apply bg-ink-900/15 dark:bg-paper-100/15 rounded-full; }
+  /* Hide scrollbar but keep scrollable — used for pill rows on mobile */
+  .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
 }
 
 /* Split-flap board */

@@ -60,9 +60,9 @@ export default function StudentProfile() {
           </div>
 
           <dl className="mt-5 space-y-3 text-sm">
-            <div className="flex items-center justify-between border-b rule pb-3 gap-2">
+            <div className="flex items-start justify-between border-b rule pb-3 gap-2">
               <dt className="text-slate2-500 shrink-0">Department</dt>
-              <dd className="font-medium text-right truncate">{student.deptName}</dd>
+              <dd className="font-medium text-right break-words max-w-[60%]">{student.deptName}</dd>
             </div>
             <div className="flex items-center justify-between border-b rule pb-3 gap-2">
               <dt className="text-slate2-500 shrink-0">Year / Semester</dt>
@@ -74,7 +74,7 @@ export default function StudentProfile() {
             </div>
             <div className="flex items-start justify-between gap-2">
               <dt className="text-slate2-500 flex items-center gap-1.5 shrink-0 pt-0.5"><FiMail size={13} /> Email</dt>
-              <dd className="font-medium text-right break-all text-xs max-w-[60%]">{student.email}</dd>
+              <dd className="font-medium text-right break-all text-xs max-w-[65%]">{student.email}</dd>
             </div>
           </dl>
 
@@ -131,7 +131,7 @@ export default function StudentProfile() {
       </div>
 
       <div>
-        <h2 className="font-display text-lg font-semibold mb-3">Weekly timetable</h2>
+        <h2 className="font-display text-base sm:text-lg font-semibold mb-3">Weekly timetable</h2>
         <TimetableGrid sessions={sessions} todayLabel={today} />
       </div>
     </div>

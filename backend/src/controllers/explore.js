@@ -58,10 +58,21 @@ export async function explore(req, res, next) {
       if (department && s.deptName !== department) continue;
       if (section && s.section !== section) continue;
       filtered.push(s);
-      if (filtered.length >= RESULT_CAP) break;
     }
 
-    res.json({ results: filtered, total: filtered.length, capped: filtered.length >= RESULT_CAP });
+    // Sort by day (Mon → Sat) then ascending start time then name,
+    // then cap — so the first RESULT_CAP results are always in order.
+    const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    filtered.sort(
+      (a, b) =>
+        DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day) ||
+        a.start - b.start ||
+        a.name.localeCompare(b.name)
+    );
+    const capped = filtered.length > RESULT_CAP;
+    const results = capped ? filtered.slice(0, RESULT_CAP) : filtered;
+
+    res.json({ results, total: results.length, capped });
   } catch (err) {
     next(err);
   }

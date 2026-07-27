@@ -37,14 +37,17 @@ export default function Explore() {
       if (filters.department && s.deptName !== filters.department) continue;
       if (filters.section && s.section !== filters.section) continue;
       out.push(s);
-      if (out.length >= RESULT_CAP) break;
     }
-    // flatSessions is pre-sorted day+time in the store, so out is already ordered.
-    // If a day filter is active, secondary sort by time then name only.
-    if (filters.day) {
-      out.sort((a, b) => a.start - b.start || a.name.localeCompare(b.name));
-    }
-    return out;
+    // Always sort by day (Mon → Sat) then ascending start time then name,
+    // so the RESULT_CAP slice below is taken from a consistently ordered list.
+    const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    out.sort(
+      (a, b) =>
+        DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day) ||
+        a.start - b.start ||
+        a.name.localeCompare(b.name)
+    );
+    return out.slice(0, RESULT_CAP);
   }, [store, filters, timeRange]);
 
   const anyActive = Object.values(filters).some(Boolean);

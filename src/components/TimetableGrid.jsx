@@ -10,21 +10,16 @@ const HOUR_MARKS = Array.from({ length: 10 }, (_, i) => DAY_START + i * 60);
 
 /**
  * Groups sessions into clusters of overlapping sessions and assigns each a lane.
- * Sessions that don't overlap anything stay full-width (totalLanes = 1).
- * Only sessions within the same overlap cluster share width.
  */
 function assignLanes(sessions) {
   if (!sessions.length) return [];
 
-  // Sort by start time
   const sorted = [...sessions].map((s, originalIdx) => ({ s, originalIdx }))
     .sort((a, b) => a.s.start - b.s.start || a.s.end - b.s.end);
 
   const n = sorted.length;
-  // Build overlap adjacency
   const overlaps = (a, b) => a.start < b.end && a.end > b.start;
 
-  // Union-Find to cluster overlapping sessions
   const parent = Array.from({ length: n }, (_, i) => i);
   function find(x) { return parent[x] === x ? x : (parent[x] = find(parent[x])); }
   function union(x, y) { parent[find(x)] = find(y); }
@@ -35,30 +30,25 @@ function assignLanes(sessions) {
     }
   }
 
-  // Per-cluster lane assignment
-  // Map from cluster root → next available lane per time bucket
-  const clusterLanes = new Map(); // root → array of end-times per lane
+  const clusterLanes = new Map();
 
   const result = new Array(n);
   for (let i = 0; i < n; i++) {
     const root = find(i);
     if (!clusterLanes.has(root)) clusterLanes.set(root, []);
     const lanes = clusterLanes.get(root);
-    // Find first lane whose last session ended before this one starts
     let lane = lanes.findIndex((endTime) => endTime <= sorted[i].s.start);
     if (lane === -1) { lane = lanes.length; lanes.push(0); }
     lanes[lane] = sorted[i].s.end;
     result[i] = { session: sorted[i].s, lane, clusterRoot: root };
   }
 
-  // Compute totalLanes per cluster (max lane + 1)
   const clusterWidth = new Map();
   for (let i = 0; i < n; i++) {
     const { clusterRoot, lane } = result[i];
     clusterWidth.set(clusterRoot, Math.max(clusterWidth.get(clusterRoot) || 1, lane + 1));
   }
 
-  // Attach totalLanes to each result
   return result.map((r) => ({ ...r, totalLanes: clusterWidth.get(r.clusterRoot) }));
 }
 
@@ -88,9 +78,33 @@ export default function TimetableGrid({ sessions, todayLabel }) {
 
   const totalHeight = (DAY_END - DAY_START) * PX_PER_MIN;
 
+  // ── Mobile: grouped list by day ──────────────────────────────────────────
+  const mobileView = useMemo(() => {
+    return daysPresent.map((day) => {
+      const daySessions = (byDay.get(day) || []).slice().sort((a, b) => a.start - b.start);
+      return { day, sessions: daySessions };
+    });
+  }, [daysPresent, byDay]);
+
   return (
     <div className="card overflow-hidden">
-      <div className="overflow-x-auto scrollbar-thin">
+
+      {/* ── Mobile: day-by-day accordion list ─────────────────────────── */}
+      <div className="sm:hidden divide-y divide-ink-900/10 dark:divide-paper-100/10">
+        {mobileView.map(({ day, sessions: daySessions }) => (
+          <MobileDaySection
+            key={day}
+            day={day}
+            sessions={daySessions}
+            isToday={day === todayLabel}
+            selected={selected}
+            setSelected={setSelected}
+          />
+        ))}
+      </div>
+
+      {/* ── Desktop: the full pixel-grid timetable ─────────────────────── */}
+      <div className="hidden sm:block overflow-x-auto scrollbar-thin">
         <div className="min-w-[720px]">
 
           {/* Day header row */}
@@ -154,7 +168,7 @@ export default function TimetableGrid({ sessions, todayLabel }) {
 
                   const leftPct  = (lane / totalLanes) * 100;
                   const widthPct = (1 / totalLanes) * 100;
-                  const GAP = totalLanes > 1 ? 1 : 2; // px gap between lanes
+                  const GAP = totalLanes > 1 ? 1 : 2;
 
                   return (
                     <button
@@ -190,9 +204,9 @@ export default function TimetableGrid({ sessions, todayLabel }) {
         </div>
       </div>
 
-      {/* Detail panel */}
+      {/* Detail panel — shown on desktop when a block is tapped */}
       {selected && (
-        <div className="border-t rule p-4 flex flex-wrap items-start gap-x-6 gap-y-2 bg-paper-100/60 dark:bg-ink-900/60">
+        <div className="hidden sm:flex border-t rule p-4 flex-wrap items-start gap-x-6 gap-y-2 bg-paper-100/60 dark:bg-ink-900/60">
           <div className="min-w-0">
             <div className="font-display font-semibold leading-tight">{selected.courseName || selected.name}</div>
             <div className="eyebrow mt-0.5">{selected.code}</div>
@@ -215,6 +229,79 @@ export default function TimetableGrid({ sessions, todayLabel }) {
           >
             ✕ Close
           </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Mobile day section ────────────────────────────────────────────────────────
+function MobileDaySection({ day, sessions, isToday, selected, setSelected }) {
+  const [open, setOpen] = useState(isToday);
+  const c_today = isToday
+    ? 'bg-amber-400/10 text-amber-600 dark:text-amber-400'
+    : 'text-ink-700 dark:text-paper-200';
+
+  return (
+    <div>
+      {/* Day header — tap to expand/collapse */}
+      <button
+        className={`w-full flex items-center justify-between px-4 py-3 text-left ${c_today}`}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="font-display font-semibold text-sm">
+          {day}
+          {isToday && <span className="ml-2 eyebrow text-amber-500 dark:text-amber-400">Today</span>}
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="eyebrow">{sessions.length} class{sessions.length !== 1 ? 'es' : ''}</span>
+          <svg
+            className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </span>
+      </button>
+
+      {open && (
+        <div className="px-3 pb-3 space-y-2">
+          {sessions.length === 0 ? (
+            <p className="text-xs text-slate2-400 text-center py-3">No classes</p>
+          ) : (
+            sessions.map((s, idx) => {
+              const c = colorForCode(s.code);
+              const isSelected = selected?.code === s.code && selected?.start === s.start && selected?.day === s.day;
+              return (
+                <button
+                  key={`${s.code}-${s.start}-${idx}`}
+                  onClick={() => setSelected(isSelected ? null : s)}
+                  className={`w-full text-left rounded-xl border-l-4 ${c.border} ${c.bg} px-3 py-2.5 focus:outline-none`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className={`text-sm font-semibold leading-tight ${c.text} flex-1 min-w-0`}>
+                      {s.courseName || s.name}
+                    </p>
+                    <span className="font-mono text-[10px] text-ink-700/60 dark:text-paper-200/60 shrink-0 whitespace-nowrap">
+                      {formatMinutes(s.start)}–{formatMinutes(s.end)}
+                    </span>
+                  </div>
+                  <p className="font-mono text-[10px] text-ink-700/60 dark:text-paper-200/60 mt-0.5">{s.code}</p>
+
+                  {isSelected && (
+                    <div className="mt-2 pt-2 border-t border-ink-900/10 dark:border-paper-100/10 space-y-1">
+                      <div className="flex items-center gap-1.5 text-xs text-ink-700 dark:text-paper-200">
+                        <FiUser size={11} className="shrink-0" />{s.faculty}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-ink-700 dark:text-paper-200">
+                        <FiMapPin size={11} className="shrink-0" />Room {s.room}
+                      </div>
+                    </div>
+                  )}
+                </button>
+              );
+            })
+          )}
         </div>
       )}
     </div>

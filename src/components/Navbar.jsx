@@ -34,7 +34,7 @@ export default function Navbar() {
   const roleInfo = user ? (ROLE_LABEL[user.role] ?? ROLE_LABEL.user) : null;
 
   return (
-    <header className="sticky top-0 z-40 bg-paper-50/90 dark:bg-ink-900/90 backdrop-blur border-b rule">
+    <header className="sticky top-0 z-40 bg-paper-50/90 dark:bg-ink-900/90 backdrop-blur border-b rule" style={{ WebkitBackdropFilter: 'blur(12px)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         <NavLink to="/" className="flex items-center gap-2.5 shrink-0">
           <div className="w-8 h-8 rounded-lg bg-ink-900 dark:bg-amber-500 flex items-center justify-center">
@@ -94,38 +94,56 @@ export default function Navbar() {
       </div>
 
       {open && (
-        <nav className="md:hidden border-t rule px-4 py-2 flex flex-col gap-1 bg-paper-50 dark:bg-ink-900">
-          {links.map(({ to, label, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              onClick={() => setOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium ${
-                  isActive ? 'bg-ink-900 text-amber-400 dark:bg-amber-500 dark:text-ink-950' : ''
-                }`
-              }
-            >
-              <Icon size={16} />
-              {label}
-            </NavLink>
-          ))}
-          {user && (
-            <button
-              onClick={() => { logout(); setOpen(false); }}
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-ink-700 dark:text-paper-200"
-            >
-              <FiLogOut size={16} />
-              <span>
+        <>
+          {/* Backdrop — tap outside to close */}
+          <div
+            className="md:hidden fixed inset-0 z-30 bg-ink-950/20 dark:bg-ink-950/50"
+            onClick={() => setOpen(false)}
+            aria-hidden="true"
+          />
+          {/* Drawer — fixed below the header, doesn't push page content */}
+          <nav className="md:hidden fixed top-16 left-0 right-0 z-40 border-t rule px-4 py-3 flex flex-col gap-1 bg-paper-50 dark:bg-ink-900 shadow-xl max-h-[calc(100dvh-4rem)] overflow-y-auto">
+            {/* User identity */}
+            {user && roleInfo && (
+              <div className="flex items-center gap-2.5 px-3 py-2.5 mb-1 border-b rule">
+                <div className="w-8 h-8 rounded-full bg-ink-900 dark:bg-amber-500 text-amber-400 dark:text-ink-950 flex items-center justify-center font-display font-semibold text-sm shrink-0">
+                  {user.name?.[0] || '?'}
+                </div>
+                <div className="min-w-0">
+                  <div className="font-medium text-sm truncate">{user.name}</div>
+                  <div className={`text-xs ${roleInfo.cls}`}>{roleInfo.text}</div>
+                </div>
+              </div>
+            )}
+            {links.map(({ to, label, icon: Icon, end }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-2.5 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-ink-900 text-amber-400 dark:bg-amber-500 dark:text-ink-950'
+                      : 'text-ink-700 dark:text-paper-200 hover:bg-ink-900/5 dark:hover:bg-paper-100/10'
+                  }`
+                }
+              >
+                <Icon size={18} />
+                {label}
+              </NavLink>
+            ))}
+            {user && (
+              <button
+                onClick={() => { logout(); setOpen(false); }}
+                className="flex items-center gap-2.5 px-3 py-3 rounded-lg text-sm font-medium text-ink-700 dark:text-paper-200 hover:bg-ink-900/5 dark:hover:bg-paper-100/10 mt-1 border-t rule pt-3 transition-colors"
+              >
+                <FiLogOut size={18} />
                 Sign out
-                {roleInfo && (
-                  <span className={`ml-1.5 text-xs ${roleInfo.cls}`}>({roleInfo.text})</span>
-                )}
-              </span>
-            </button>
-          )}
-        </nav>
+              </button>
+            )}
+          </nav>
+        </>
       )}
     </header>
   );

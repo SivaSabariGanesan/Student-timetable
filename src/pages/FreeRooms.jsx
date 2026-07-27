@@ -70,12 +70,13 @@ export default function FreeRooms() {
         <p className="text-sm text-slate2-500 mt-1">Find available rooms by day and time slot.</p>
       </div>
 
-      <div className="flex flex-wrap gap-3 items-center">
+      {/* Day selector — horizontally scrollable on mobile */}
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-none">
         {DAY_ORDER.map((d) => (
           <button
             key={d}
             onClick={() => setDay(d)}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-w-[48px] ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors shrink-0 ${
               day === d
                 ? 'bg-ink-900 dark:bg-amber-500 text-amber-400 dark:text-ink-950'
                 : 'border rule hover:bg-ink-900/5 dark:hover:bg-paper-100/10'
@@ -86,23 +87,24 @@ export default function FreeRooms() {
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-2 items-center">
-        <span className="eyebrow mr-1">Time slot:</span>
+      {/* Time slot pills — horizontally scrollable on mobile */}
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-none items-center">
+        <span className="eyebrow shrink-0">Time:</span>
         <button
           onClick={() => setSlot(null)}
-          className={`px-4 py-2.5 rounded-lg text-xs font-medium transition-colors ${
+          className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors shrink-0 ${
             !slot
               ? 'bg-ink-900 dark:bg-amber-500 text-amber-400 dark:text-ink-950'
               : 'border rule hover:bg-ink-900/5 dark:hover:bg-paper-100/10'
           }`}
         >
-          All slots
+          All
         </button>
         {SLOT_PRESETS.map((s) => (
           <button
             key={s.label}
             onClick={() => setSlot(s)}
-            className={`px-4 py-2.5 rounded-lg text-xs font-mono transition-colors ${
+            className={`px-3 py-2 rounded-lg text-xs font-mono transition-colors shrink-0 ${
               slot?.label === s.label
                 ? 'bg-ink-900 dark:bg-amber-500 text-amber-400 dark:text-ink-950'
                 : 'border rule hover:bg-ink-900/5 dark:hover:bg-paper-100/10'
