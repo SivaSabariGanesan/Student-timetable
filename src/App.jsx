@@ -44,13 +44,6 @@ function RequireNotBasicUser({ children }) {
   }
   return children;
 }
-  const { isAdmin, loading } = useAuth();
-  const location = useLocation();
-
-  if (loading) return <LoadingSkeleton />;
-  if (!isAdmin) return <Navigate to="/" state={{ from: location }} replace />;
-  return children;
-}
 
 export default function App() {
   const { status, progress, error } = useData();
