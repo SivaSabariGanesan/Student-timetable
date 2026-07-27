@@ -219,7 +219,7 @@ export default function TimetableGrid({ sessions, todayLabel }) {
             <FiMapPin size={13} className="shrink-0" />
             <span className="truncate">{selected.room}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-sm font-mono text-slate2-500">
+          <div className="flex items-center gap-1.5 text-sm font-mono font-bold text-slate2-400">
             <FiClock size={13} className="shrink-0" />
             {formatMinutes(selected.start)} – {formatMinutes(selected.end)}
           </div>
@@ -249,7 +249,7 @@ function MobileDaySection({ day, sessions, isToday, selected, setSelected }) {
         className={`w-full flex items-center justify-between px-4 py-3 text-left ${c_today}`}
         onClick={() => setOpen((o) => !o)}
       >
-        <span className="font-display font-semibold text-sm">
+        <span className="font-display font-bold text-sm">
           {day}
           {isToday && <span className="ml-2 eyebrow text-amber-500 dark:text-amber-400">Today</span>}
         </span>
@@ -282,7 +282,7 @@ function MobileDaySection({ day, sessions, isToday, selected, setSelected }) {
                     <p className={`text-sm font-semibold leading-tight ${c.text} flex-1 min-w-0`}>
                       {s.courseName || s.name}
                     </p>
-                    <span className="font-mono text-[10px] text-ink-700/60 dark:text-paper-200/60 shrink-0 whitespace-nowrap">
+                    <span className="font-mono text-[10px] font-bold text-ink-700/70 dark:text-paper-200/70 shrink-0 whitespace-nowrap">
                       {formatMinutes(s.start)}–{formatMinutes(s.end)}
                     </span>
                   </div>

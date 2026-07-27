@@ -123,14 +123,14 @@ function FacultySchedule({ schedule, store, scrollable = false }) {
           <div key={i} className="border rule rounded-xl p-3.5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <span className="eyebrow">{row.day}</span>
+                <span className="eyebrow font-bold">{row.day}</span>
                 <div className="font-medium mt-0.5 break-words">{row.name}</div>
                 <div className="text-xs text-slate2-500 font-mono mt-0.5">
                   {row.code} · Room {row.room}
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <div className="font-mono text-sm text-slate2-500 whitespace-nowrap">
+                <div className="font-mono text-sm font-bold text-slate2-600 dark:text-slate2-300 whitespace-nowrap">
                   {formatMinutes(row.start)}–{formatMinutes(row.end)}
                 </div>
                 <div className="text-xs text-slate2-400 flex items-center gap-1 justify-end mt-0.5">

@@ -86,9 +86,11 @@ export default function Explore() {
                     <div className="font-medium truncate">{s.name}</div>
                     <div className="font-mono text-xs text-slate2-500 truncate">{s.reg}</div>
                     <div className="text-sm text-slate2-600 dark:text-slate2-300 truncate mt-0.5">{s.courseName}</div>
-                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate2-400 mt-1">
-                      <span className="font-mono">{s.day.slice(0, 3)} {formatMinutes(s.start)}–{formatMinutes(s.end)}</span>
-                      <span>Rm {s.room}</span>
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs mt-1">
+                      <span className="font-mono font-bold text-slate2-600 dark:text-slate2-300">
+                        {s.day.slice(0, 3)} {formatMinutes(s.start)}–{formatMinutes(s.end)}
+                      </span>
+                      <span className="text-slate2-400">Rm {s.room}</span>
                     </div>
                   </div>
                 </Link>
@@ -115,8 +117,8 @@ export default function Explore() {
                   <span className="text-sm text-slate2-500 truncate min-w-[9rem] flex-1">{s.courseName}</span>
                   <span className="text-xs text-slate2-400 hidden lg:inline">{s.faculty}</span>
                   <span className="text-xs font-mono text-slate2-400 w-16 shrink-0">Rm {s.room}</span>
-                  <span className="text-xs font-mono w-16 shrink-0 text-right">{s.day.slice(0, 3)}</span>
-                  <span className="text-xs font-mono w-32 shrink-0 text-right">
+                  <span className="text-xs font-mono font-bold text-slate2-600 dark:text-slate2-300 w-16 shrink-0 text-right">{s.day.slice(0, 3)}</span>
+                  <span className="text-xs font-mono font-bold text-slate2-600 dark:text-slate2-300 w-32 shrink-0 text-right">
                     {formatMinutes(s.start)}–{formatMinutes(s.end)}
                   </span>
                 </Link>

@@ -124,10 +124,10 @@ export default function FreeRooms() {
 
       {slot && (
         <div className="flex items-center gap-3 text-sm">
-          <span className="font-medium">{day}</span>
-          <span className="font-mono text-slate2-500">{slot.label}</span>
+          <span className="font-bold">{day}</span>
+          <span className="font-mono font-bold text-slate2-600 dark:text-slate2-300">{slot.label}</span>
           <span className="text-slate2-400">—</span>
-          <span className="text-good font-medium">{freeRooms?.length || 0} rooms free</span>
+          <span className="text-good font-bold">{freeRooms?.length || 0} rooms free</span>
         </div>
       )}
 
@@ -168,7 +168,7 @@ export default function FreeRooms() {
                       className="flex items-center gap-2 text-xs text-slate2-500 font-mono"
                     >
                       <FiClock size={11} className="shrink-0 text-good" />
-                      <span>
+                      <span className="font-mono font-bold text-slate2-600 dark:text-slate2-300">
                         {formatMinutes(fs.start)} – {formatMinutes(fs.end)}
                       </span>
                     </div>
