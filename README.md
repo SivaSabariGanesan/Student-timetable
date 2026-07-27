@@ -23,7 +23,7 @@
 
 ## Table of contents
 
-- [Stack ](#stack)
+- [Stack](#stack)
 - [Project structure](#project-structure)
 - [Getting started](#getting-started)
 - [Default accounts](#default-accounts)
